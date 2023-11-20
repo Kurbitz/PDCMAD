@@ -86,6 +86,4 @@ func ReadFromFile(fileName string) {
 		}
 		serverMetrics = append(serverMetrics, metric)
 	}
-
-	println(serverMetrics[35000].load15m)
 }
