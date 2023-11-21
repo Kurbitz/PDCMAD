@@ -47,5 +47,9 @@ func ReadFromFile(filePath string) ([]*Metric, error) {
 		panic(err)
 	}
 
+	for _, metric := range metrics {
+		println(metric.Timestamp)
+	}
+
 	return metrics, nil
 }
