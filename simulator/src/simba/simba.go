@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	fileName := "system-1.csv"
+	fileName := "../../../dataset/system-1.csv"
 	metrics.ReadFromFile(fileName)
 
 }
