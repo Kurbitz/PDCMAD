@@ -11,12 +11,13 @@ func main() {
 	//resultChannel := make(chan []*metrics.Metric)
 	fileName := "../../../dataset/"
 	fileNumber := []string{"system-1.csv", "system-2.csv"}
+
 	for _, fileNum := range fileNumber {
 		wg.Add(1)
-		go func() {
-			metrics.ReadFromFile((fileName + fileNum))
+		go func(f string) {
+			metrics.ReadFromFile((fileName + f))
 			wg.Done()
-		}()
+		}(fileNum)
 	}
 
 	wg.Wait()
