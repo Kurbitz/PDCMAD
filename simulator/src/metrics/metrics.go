@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"errors"
 	"os"
 
 	"github.com/gocarina/gocsv"
@@ -34,22 +33,22 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up"`
 }
 
-func ReadFromFile(filePath string) ([]*Metric, error) {
+func ReadFromFile(filePath string) {
+
 	file, err := os.Open(filePath)
+	println(filePath)
 	if err != nil {
-		return nil, errors.New("file not found")
+		println("Error occured in %s", filePath)
+		return
 	}
 	defer file.Close()
 
 	metrics := []*Metric{}
-
 	if err := gocsv.UnmarshalFile(file, &metrics); err != nil {
 		panic(err)
 	}
-
 	for _, metric := range metrics {
-		println(metric.Timestamp, metric.Load15m)
+		println(filePath, metric.Timestamp, metric.Load1m)
 	}
 
-	return metrics, nil
 }
