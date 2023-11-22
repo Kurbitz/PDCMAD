@@ -1,23 +1,30 @@
 package main
 
 import (
+	"log"
+	"os"
 	"pdc-mad/metrics"
-
 	"sync"
 )
 
 func main() {
 	var wg sync.WaitGroup
 	//resultChannel := make(chan []*metrics.Metric)
-	fileName := "../../../dataset/"
-	fileNumber := []string{"system-1.csv", "system-2.csv"}
-
-	for _, fileNum := range fileNumber {
+	folderPath := "../../../dataset/"
+	files, err := os.ReadDir(folderPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range files {
+		if file.IsDir() || file.Name() == ".gitkeep" {
+			continue
+		}
+		filePath := folderPath + file.Name()
 		wg.Add(1)
-		go func(f string) {
-			metrics.ReadFromFile((fileName + f))
+		go func(fp string) {
+			metrics.ReadFromFile(fp)
 			wg.Done()
-		}(fileNum)
+		}(filePath)
 	}
 
 	wg.Wait()
