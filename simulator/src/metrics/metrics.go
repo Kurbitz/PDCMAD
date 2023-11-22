@@ -47,8 +47,8 @@ func ReadFromFile(filePath string) {
 	if err := gocsv.UnmarshalFile(file, &metrics); err != nil {
 		panic(err)
 	}
-	for _, metric := range metrics {
+	/*for _, metric := range metrics {
 		println(filePath, metric.Timestamp, metric.Load1m)
-	}
+	}*/
 
 }
