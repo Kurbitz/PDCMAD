@@ -7,9 +7,10 @@ import (
 )
 
 type SystemMetric struct {
-	Id   string
-	Metr []*Metric
+	Id      string
+	Metrics []*Metric
 }
+
 type Metric struct {
 	Timestamp               int64   `csv:"timestamp"`
 	Load1m                  float64 `csv:"load-1m"`
