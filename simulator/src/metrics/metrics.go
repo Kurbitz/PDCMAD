@@ -38,6 +38,35 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up"`
 }
 
+func (m Metric) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"timestamp":               m.Timestamp,
+		"load-1m":                 m.Load1m,
+		"load-5m":                 m.Load5m,
+		"load-15m":                m.Load15m,
+		"sys-mem-swap-total":      m.Sys_Mem_Swap_Total,
+		"sys-mem-swap-free":       m.Sys_Mem_Swap_Free,
+		"sys-mem-free":            m.Sys_Mem_Free,
+		"sys-mem-cache":           m.Sys_Mem_Cache,
+		"sys-mem-buffered":        m.Sys_Mem_Buffered,
+		"sys-mem-available":       m.Sys_Mem_Available,
+		"sys-mem-total":           m.Sys_Mem_Total,
+		"sys-fork-rate":           m.Sys_Fork_Rate,
+		"sys-interrupt-rate":      m.Sys_Interrupt_Rate,
+		"sys-context-switch-rate": m.Sys_Context_Switch_Rate,
+		"sys-thermal":             m.Sys_Thermal,
+		"disk-io-time":            m.Disk_Io_Time,
+		"disk-bytes-read":         m.Disk_Bytes_Read,
+		"disk-bytes-written":      m.Disk_Bytes_Written,
+		"disk-io-read":            m.Disk_Io_Read,
+		"disk-io-write":           m.Disk_Io_Write,
+		"cpu-iowait":              m.Cpu_Io_Wait,
+		"cpu-system":              m.Cpu_System,
+		"cpu-user":                m.Cpu_User,
+		"server-up":               m.Server_Up,
+	}
+}
+
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
