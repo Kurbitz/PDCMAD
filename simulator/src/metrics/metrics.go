@@ -38,11 +38,10 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up"`
 }
 
-func ReadFromFile(filePath string) (*SystemMetric, error) {
-
+func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		println("Error occured in %s", filePath)
+		log.Fatalf("Error occured in %s", filePath)
 		return nil, err
 	}
 	defer file.Close()
@@ -51,11 +50,7 @@ func ReadFromFile(filePath string) (*SystemMetric, error) {
 	if err := gocsv.UnmarshalFile(file, &metrics); err != nil {
 		panic(err)
 	}
-	var systemMetrics = SystemMetric{Id: file.Name(), Metr: metrics}
+	var systemMetrics = SystemMetric{Id: id, Metrics: metrics}
 
 	return &systemMetrics, nil
-	/*for _, metric := range metrics {
-		println(filePath, metric.Timestamp, metric.Load1m)
-	}*/
-
 }
