@@ -6,6 +6,10 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
+type SystemMetric struct {
+	Id   string
+	Metr []*Metric
+}
 type Metric struct {
 	Timestamp               int64   `csv:"timestamp"`
 	Load1m                  float64 `csv:"load-1m"`
@@ -33,13 +37,12 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up"`
 }
 
-func ReadFromFile(filePath string) {
+func ReadFromFile(filePath string) (*SystemMetric, error) {
 
 	file, err := os.Open(filePath)
-	println(filePath)
 	if err != nil {
 		println("Error occured in %s", filePath)
-		return
+		return nil, err
 	}
 	defer file.Close()
 
@@ -47,6 +50,9 @@ func ReadFromFile(filePath string) {
 	if err := gocsv.UnmarshalFile(file, &metrics); err != nil {
 		panic(err)
 	}
+	var systemMetrics = SystemMetric{Id: file.Name(), Metr: metrics}
+
+	return &systemMetrics, nil
 	/*for _, metric := range metrics {
 		println(filePath, metric.Timestamp, metric.Load1m)
 	}*/
