@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"log"
 	"os"
 
 	"github.com/gocarina/gocsv"
