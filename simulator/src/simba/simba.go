@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"pdc-mad/influxdbAPI"
 	"pdc-mad/metrics"
 	"sync"
-	"time"
 )
 
 func main() {
@@ -17,10 +14,8 @@ func main() {
 	folderPath := "../../../dataset/"
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
-	startTime := time.Now()
 
 	for _, file := range files {
 		if file.IsDir() || filepath.Ext(file.Name()) != ".csv" {
@@ -40,6 +35,4 @@ func main() {
 	}
 
 	wg.Wait()
-	elapsedTime := time.Since(startTime)
-	fmt.Printf("Time: %s", elapsedTime)
 }

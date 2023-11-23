@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"log"
 	"os"
 
 	"github.com/gocarina/gocsv"
@@ -71,7 +70,6 @@ func (m Metric) ToMap() map[string]interface{} {
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Fatalf("Error occured in %s", filePath)
 		return nil, err
 	}
 	defer file.Close()
