@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"pdc-mad/metrics"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -15,6 +17,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	startTime := time.Now()
 	for _, file := range files {
 		if file.IsDir() || file.Name() == ".gitkeep" {
 			continue
@@ -28,4 +31,6 @@ func main() {
 	}
 
 	wg.Wait()
+	elapsedTime := time.Since(startTime)
+	fmt.Printf("Time: %s", elapsedTime)
 }
