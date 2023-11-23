@@ -21,7 +21,7 @@ func main() {
 	filePathChan := make(chan string, len(files))
 	startTime := time.Now()
 	for _, file := range files {
-		if file.IsDir() || file.Name() == ".gitkeep" {
+		if file.IsDir() || filepath.Ext(file.Name()) != ".csv" {
 			continue
 		}
 		filePath := folderPath + file.Name()
