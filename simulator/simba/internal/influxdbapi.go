@@ -1,13 +1,12 @@
-package influxdbAPI
+package simba
 
 import (
-	"pdc-mad/metrics"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-func WriteMetric(m metrics.SystemMetric) error {
+func WriteMetric(m SystemMetric) error {
 	// FIXME: Hide API key, maybe .env file?
 	client := influxdb2.NewClient("http://localhost:8086", "secret")
 	writeAPI := client.WriteAPI("test", "metrics")

@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"pdc-mad/influxdbAPI"
-	"pdc-mad/metrics"
+	simba "pdc-mad/simba/internal"
+
 	"sync"
 )
 
@@ -28,8 +28,8 @@ func main() {
 			// Remove the .csv from the file name
 			// FIXME: Use better ID
 			id := filepath.Base(filePath)[:len(filepath.Base(filePath))-len(filepath.Ext(filePath))]
-			metric, _ := metrics.ReadFromFile(filePath, id)
-			influxdbAPI.WriteMetric(*metric)
+			metric, _ := simba.ReadFromFile(filePath, id)
+			simba.WriteMetric(*metric)
 		}(filePath)
 
 	}
