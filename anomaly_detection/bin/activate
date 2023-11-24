@@ -38,7 +38,8 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/home/fredrik/dev/sw/Performance_Data_Collector/anomaly_detection"
+VIRTUAL_ENV=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null &&  pwd )/../;
+
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
