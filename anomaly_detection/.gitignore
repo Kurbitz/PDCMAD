@@ -20,6 +20,7 @@ share/
 lib/
 lib64
 lib64/
+pyenv.cfg
 parts/
 sdist/
 var/
