@@ -1,8 +1,11 @@
-module pdc-mad/influxdbAPI
+module pdc-mad/simba
 
 go 1.20
 
-require github.com/influxdata/influxdb-client-go/v2 v2.12.4
+require (
+	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a
+	github.com/influxdata/influxdb-client-go/v2 v2.12.4
+)
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
