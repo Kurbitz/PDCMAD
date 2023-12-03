@@ -11,6 +11,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Check if the environment variable exists
+// If not, exit the program with an error
 func checkEnvVar(variableName string) {
 	if _, exists := os.LookupEnv(variableName); !exists {
 		log.Fatalf("Missing environment variable: %s", variableName)
@@ -18,10 +20,12 @@ func checkEnvVar(variableName string) {
 }
 
 func init() {
+	// Load the .env file
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
 
+	// Check if all the environment variables are set
 	checkEnvVar("INFLUXDB_TOKEN")
 	checkEnvVar("INFLUXDB_IP")
 	checkEnvVar("INFLUXDB_PORT")
