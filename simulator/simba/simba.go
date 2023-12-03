@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	simba "pdc-mad/simba/internal"
@@ -18,7 +19,7 @@ func checkEnvVar(variableName string) {
 
 func init() {
 	if err := godotenv.Load(); err != nil {
-		panic(err)
+		log.Println("No .env file found")
 	}
 
 	checkEnvVar("INFLUXDB_TOKEN")
