@@ -10,23 +10,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func checkEnvVar(variableName string) {
+	if _, exists := os.LookupEnv(variableName); !exists {
+		log.Fatalf("Missing environment variable: %s", variableName)
+	}
+}
+
 func init() {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}
 
-	if _, tokenExists := os.LookupEnv("INFLUXDB_TOKEN"); !tokenExists {
-		panic("Missing variable in .env file: INFLUXDB_TOKEN")
-	}
-	if _, ipExists := os.LookupEnv("INFLUXDB_IP"); !ipExists {
-		panic("Missing variable in .env file: INFLUXDB_IP")
-	}
-	if _, portExists := os.LookupEnv("INFLUXDB_PORT"); !portExists {
-		panic("Missing variable in .env file: INFLUXDB_PORT")
-	}
-	if _, pathExists := os.LookupEnv("DATASET_PATH"); !pathExists {
-		panic("Missing variable in .env file: DATASET_PATH")
-	}
+	checkEnvVar("INFLUXDB_TOKEN")
+	checkEnvVar("INFLUXDB_IP")
+	checkEnvVar("INFLUXDB_PORT")
+	checkEnvVar("DATASET_PATH")
 }
 
 func main() {
