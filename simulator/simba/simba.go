@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/joho/godotenv"
+	"github.com/urfave/cli/v2"
 )
 
 // Check if the environment variable exists
@@ -33,8 +35,59 @@ func init() {
 }
 
 func main() {
+	// Define the CLI Commands and flags
+	app := &cli.App{
+		Name:  "simba",
+		Usage: "Simulate metrics etc.",
+		Authors: []*cli.Author{
+			{
+				Name: "PDC-MAD",
+			},
+		},
+		EnableBashCompletion: true,
+		Commands: []*cli.Command{
+			{
+				Name:   "populate",
+				Usage:  "Batch import data",
+				Action: populate,
+			},
+			{
+				Name:  "stream",
+				Usage: "simulate in real time",
+				Action: func(ctx *cli.Context) error {
+					fmt.Println("real time")
+					return nil
+				},
+			},
+			{
+				Name:  "clean",
+				Usage: "Clean the database",
+				Action: func(ctx *cli.Context) error {
+					fmt.Println("clean")
+					return nil
+				},
+			},
+			{
+				Name:  "trigger",
+				Usage: "Trigger anomaly detection",
+				Action: func(ctx *cli.Context) error {
+					fmt.Println("trigger")
+					return nil
+				},
+			},
+		},
+	}
+
+	if err := app.Run(os.Args); err != nil {
+		log.Fatalln(err)
+	}
+
+}
+
+// populate the database with the data from the dataset
+// FIXME: Add a parameters for dataset path, duration, etc.
+func populate(ctx *cli.Context) error {
 	var wg sync.WaitGroup
-	// FIXME: Read this from a parameter or .env file
 	datasetPath := os.Getenv("DATASET_PATH")
 	files, err := os.ReadDir(datasetPath)
 	if err != nil {
@@ -57,6 +110,6 @@ func main() {
 		}(filePath)
 
 	}
-
 	wg.Wait()
+	return nil
 }
