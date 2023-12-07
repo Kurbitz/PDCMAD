@@ -6,33 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	simba "pdc-mad/simba/internal"
-
 	"sync"
 
-	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 )
-
-// Check if the environment variable exists
-// If not, exit the program with an error
-func checkEnvVar(variableName string) {
-	if _, exists := os.LookupEnv(variableName); !exists {
-		log.Fatalf("Missing environment variable: %s", variableName)
-	}
-}
-
-func init() {
-	// Load the .env file
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
-
-	// Check if all the environment variables are set
-	checkEnvVar("INFLUXDB_TOKEN")
-	checkEnvVar("INFLUXDB_IP")
-	checkEnvVar("INFLUXDB_PORT")
-	checkEnvVar("DATASET_PATH")
-}
 
 func main() {
 	// Define the CLI Commands and flags
