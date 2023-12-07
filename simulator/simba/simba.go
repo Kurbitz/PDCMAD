@@ -13,6 +13,32 @@ import (
 
 func main() {
 	// Define the CLI Commands and flags
+
+	simulateFlags := []cli.Flag{
+		&cli.StringFlag{
+			Name:    "databasetoken",
+			EnvVars: []string{"INFLUXDB_TOKEN"},
+			Usage:   "InfluxDB token",
+			Value:   "",
+		},
+		&cli.StringFlag{
+			Name:    "databaseip",
+			EnvVars: []string{"INFLUXDB_IP"},
+			Usage:   "InfluxDB IP",
+			Value:   "localhost",
+		},
+		&cli.StringFlag{
+			Name:    "databaseport",
+			EnvVars: []string{"INFLUXDB_PORT"},
+			Usage:   "InfluxDB port",
+			Value:   "8086",
+		},
+		&cli.StringFlag{
+			Name:  "duration",
+			Usage: "duration",
+		},
+	}
+
 	app := &cli.App{
 		Name:  "simba",
 		Usage: "Simulate metrics etc.",
@@ -24,19 +50,31 @@ func main() {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			{
-				Name:      "populate",
-				Usage:     "Batch import data",
-				Action:    populate,
+				Name:      "simulate",
+				Usage:     "Simulate metrics from file(s)",
 				ArgsUsage: "<file1> <file2> ...",
-			},
-			{
-				Name:  "stream",
-				Usage: "simulate in real time",
-				Action: func(ctx *cli.Context) error {
-					fmt.Println("real time")
-					return nil
+				Subcommands: []*cli.Command{
+					{
+						Name:   "fill",
+						Usage:  "fill the database with data from file(s)",
+						Action: fill,
+						Flags:  simulateFlags,
+					},
+					{
+						Name:  "stream",
+						Usage: "stream data from file(s) in real time to the database",
+						Action: func(ctx *cli.Context) error {
+							fmt.Println("simulate stream")
+							return nil
+						},
+						Flags: append(simulateFlags, &cli.IntFlag{
+							Name:  "timemultiplier",
+							Value: 1,
+						}),
+					},
 				},
 			},
+
 			{
 				Name:  "clean",
 				Usage: "Clean the database",
@@ -63,9 +101,9 @@ func main() {
 }
 
 // FIXME: Add a parameters for, duration, etc.
-// The populate command reads the files and sends them to InfluxDB
-// The files are passed as arguments to the application (simba populate file1.csv file2.csv etc.)
-func populate(ctx *cli.Context) error {
+// The fill command reads the files and sends them to InfluxDB
+// The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
+func fill(ctx *cli.Context) error {
 	// Validate ctx.Args contains at least one file
 	if ctx.NArg() == 0 {
 		return cli.Exit("Missing file(s)", 1)
