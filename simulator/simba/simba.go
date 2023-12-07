@@ -92,6 +92,13 @@ func main() {
 				},
 			},
 		},
+		// FIXME: Make these persistent flags instead. Only supported in v3 alpha right now though.
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "verbose",
+				Usage: "Enable verbose output",
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
