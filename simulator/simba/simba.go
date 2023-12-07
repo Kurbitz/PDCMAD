@@ -6,7 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	simba "pdc-mad/simba/internal"
+	"regexp"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/urfave/cli/v2"
 )
@@ -16,19 +19,19 @@ func main() {
 
 	simulateFlags := []cli.Flag{
 		&cli.StringFlag{
-			Name:    "databasetoken",
+			Name:    "dbtoken",
 			EnvVars: []string{"INFLUXDB_TOKEN"},
 			Usage:   "InfluxDB token",
 			Value:   "",
 		},
 		&cli.StringFlag{
-			Name:    "databaseip",
+			Name:    "dbip",
 			EnvVars: []string{"INFLUXDB_IP"},
 			Usage:   "InfluxDB IP",
 			Value:   "localhost",
 		},
 		&cli.StringFlag{
-			Name:    "databaseport",
+			Name:    "dbport",
 			EnvVars: []string{"INFLUXDB_PORT"},
 			Usage:   "InfluxDB port",
 			Value:   "8086",
@@ -36,6 +39,17 @@ func main() {
 		&cli.StringFlag{
 			Name:  "duration",
 			Usage: "duration",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "startat",
+			Usage: "Starting line in file",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "gap",
+			Usage: "Gap to now",
+			Value: "",
 		},
 	}
 
@@ -111,11 +125,43 @@ func main() {
 // FIXME: Add a parameters for, duration, etc.
 // The fill command reads the files and sends them to InfluxDB
 // The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
+func parseTime(timeString string) time.Duration {
+
+	if timeString == "" {
+		return 0
+	}
+	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
+	//res := r.FindString(timeString)
+	match := r.FindStringSubmatch(timeString)
+	if len(match) == 0 {
+		return 0
+	}
+	amount, err := strconv.Atoi(match[1])
+	if err != nil {
+		panic(err)
+	}
+
+	switch match[2] {
+	case "d":
+		return ((time.Hour * 24) * time.Duration(amount))
+	case "h":
+		return ((time.Hour) * time.Duration(amount))
+	case "m":
+		return (time.Minute * time.Duration(amount))
+
+	}
+	return 0
+}
+
 func fill(ctx *cli.Context) error {
 	// Validate ctx.Args contains at least one file
 	if ctx.NArg() == 0 {
 		return cli.Exit("Missing file(s)", 1)
 	}
+	if ctx.String("dbtoken") == "" {
+		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
+	}
+
 	for _, file := range ctx.Args().Slice() {
 		// Validate the files exist
 		if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -138,6 +184,16 @@ func fill(ctx *cli.Context) error {
 
 	var wg sync.WaitGroup
 
+	// Parse the flags
+	startAt := parseTime(ctx.String("startat"))
+	duration := parseTime(ctx.String("duration"))
+	gap := parseTime(ctx.String("gap"))
+
+	var influxDBApi = simba.InfluxDBApi{
+		Token: ctx.String("dbtoken"),
+		Url:   fmt.Sprintf("http://%s:%s", ctx.String("dbip"), ctx.String("dbport")),
+	}
+
 	for _, file := range ctx.Args().Slice() {
 		wg.Add(1)
 		go func(filePath string) {
@@ -146,7 +202,10 @@ func fill(ctx *cli.Context) error {
 			// FIXME: Use better ID
 			id := filepath.Base(filePath)[:len(filepath.Base(filePath))-len(filepath.Ext(filePath))]
 			metric, _ := simba.ReadFromFile(filePath, id)
-			simba.WriteMetric(*metric)
+			if duration != 0 {
+				metric.SliceBetween(startAt, duration)
+			}
+			influxDBApi.WriteMetrics(*metric, gap)
 		}(file)
 
 	}
