@@ -1,6 +1,9 @@
 package simba
 
 import (
+	"fmt"
+	"os"
+
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -8,7 +11,9 @@ import (
 
 func WriteMetric(m SystemMetric) error {
 	// FIXME: Hide API key, maybe .env file?
-	client := influxdb2.NewClient("http://localhost:8086", "secret")
+	token := os.Getenv("INFLUXDB_TOKEN")
+	serverUrl := fmt.Sprintf("http://%v:%v", os.Getenv("INFLUXDB_IP"), os.Getenv("INFLUXDB_PORT"))
+	client := influxdb2.NewClient(serverUrl, token)
 	writeAPI := client.WriteAPI("test", "metrics")
 
 	// Find the newest timestamp and go that many seconds back in time
