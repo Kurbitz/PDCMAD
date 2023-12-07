@@ -50,19 +50,20 @@ func main() {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			{
-				Name:      "simulate",
-				Usage:     "Simulate metrics from file(s)",
-				ArgsUsage: "<file1> <file2> ...",
+				Name:  "simulate",
+				Usage: "Simulate metrics from file(s)",
 				Subcommands: []*cli.Command{
 					{
-						Name:   "fill",
-						Usage:  "fill the database with data from file(s)",
-						Action: fill,
-						Flags:  simulateFlags,
+						Name:      "fill",
+						Usage:     "fill the database with data from file(s)",
+						ArgsUsage: "<file1> <file2> ...",
+						Action:    fill,
+						Flags:     simulateFlags,
 					},
 					{
-						Name:  "stream",
-						Usage: "stream data from file(s) in real time to the database",
+						Name:      "stream",
+						Usage:     "stream data from file(s) in real time to the database",
+						ArgsUsage: "<file1> <file2> ...",
 						Action: func(ctx *cli.Context) error {
 							fmt.Println("simulate stream")
 							return nil
