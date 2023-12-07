@@ -47,9 +47,10 @@ func main() {
 		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			{
-				Name:   "populate",
-				Usage:  "Batch import data",
-				Action: populate,
+				Name:      "populate",
+				Usage:     "Batch import data",
+				Action:    populate,
+				ArgsUsage: "<file1> <file2> ...",
 			},
 			{
 				Name:  "stream",
@@ -84,21 +85,37 @@ func main() {
 
 }
 
-// populate the database with the data from the dataset
-// FIXME: Add a parameters for dataset path, duration, etc.
+// FIXME: Add a parameters for, duration, etc.
+// The populate command reads the files and sends them to InfluxDB
+// The files are passed as arguments to the application (simba populate file1.csv file2.csv etc.)
 func populate(ctx *cli.Context) error {
-	var wg sync.WaitGroup
-	datasetPath := os.Getenv("DATASET_PATH")
-	files, err := os.ReadDir(datasetPath)
-	if err != nil {
-		panic(err)
+	// Validate ctx.Args contains at least one file
+	if ctx.NArg() == 0 {
+		return cli.Exit("Missing file(s)", 1)
+	}
+	for _, file := range ctx.Args().Slice() {
+		// Validate the files exist
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			return cli.Exit(fmt.Sprintf("File %s does not exist", file), 1)
+		}
+		// Validate the files are not directories
+		if info, err := os.Stat(file); err == nil && info.IsDir() {
+			return cli.Exit(fmt.Sprintf("File %s is a directory", file), 1)
+		}
+		// Validate the files are .csv files
+		if filepath.Ext(file) != ".csv" {
+			return cli.Exit(fmt.Sprintf("File %s is not a .csv file", file), 1)
+		}
+		// Validate the files are not empty
+		if info, err := os.Stat(file); err == nil && info.Size() == 0 {
+			return cli.Exit(fmt.Sprintf("File %s is empty", file), 1)
+		}
+
 	}
 
-	for _, file := range files {
-		if file.IsDir() || filepath.Ext(file.Name()) != ".csv" {
-			continue
-		}
-		filePath := datasetPath + file.Name()
+	var wg sync.WaitGroup
+
+	for _, file := range ctx.Args().Slice() {
 		wg.Add(1)
 		go func(filePath string) {
 			defer wg.Done()
@@ -107,7 +124,7 @@ func populate(ctx *cli.Context) error {
 			id := filepath.Base(filePath)[:len(filepath.Base(filePath))-len(filepath.Ext(filePath))]
 			metric, _ := simba.ReadFromFile(filePath, id)
 			simba.WriteMetric(*metric)
-		}(filePath)
+		}(file)
 
 	}
 	wg.Wait()
