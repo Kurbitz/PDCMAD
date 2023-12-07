@@ -2,6 +2,7 @@ package simba
 
 import (
 	"os"
+	"time"
 
 	"github.com/gocarina/gocsv"
 )
@@ -65,6 +66,22 @@ func (m Metric) ToMap() map[string]interface{} {
 		"cpu-user":                m.Cpu_User,
 		"server-up":               m.Server_Up,
 	}
+}
+func (sm *SystemMetric) SliceBetween(duration, startAt time.Duration) {
+
+	var startIndex int
+	endIndex := len(sm.Metrics)
+	for i, m := range sm.Metrics {
+		if time.Second*time.Duration(m.Timestamp) >= startAt {
+			startIndex = i
+		}
+	}
+	for i, m := range sm.Metrics[startIndex:] {
+		if (time.Second*time.Duration(m.Timestamp) - startAt) == duration {
+			endIndex = i
+		}
+	}
+	sm.Metrics = sm.Metrics[startIndex:endIndex]
 }
 
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
