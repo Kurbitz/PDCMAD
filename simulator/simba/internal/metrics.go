@@ -84,6 +84,29 @@ func (sm *SystemMetric) SliceBetween(duration, startAt time.Duration) {
 	sm.Metrics = sm.Metrics[startIndex:endIndex]
 }
 
+func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
+
+	startIndex := 0
+	endIndex := len(sm.Metrics)
+	// Find the first metric that is after the startAt time
+	for i, m := range sm.Metrics {
+		if time.Second*time.Duration(m.Timestamp) >= startAt {
+			startIndex = i
+			break
+		}
+	}
+
+	// Go from the startat time and duration forward
+	for i, m := range sm.Metrics[startIndex:] {
+		if time.Second*time.Duration(m.Timestamp) >= startAt+duration {
+			endIndex = i
+			break
+		}
+	}
+
+	sm.Metrics = sm.Metrics[startIndex : startIndex+endIndex]
+}
+
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 	file, err := os.Open(filePath)
 	if err != nil {

@@ -19,19 +19,19 @@ func main() {
 
 	simulateFlags := []cli.Flag{
 		&cli.StringFlag{
-			Name:    "databasetoken",
+			Name:    "dbtoken",
 			EnvVars: []string{"INFLUXDB_TOKEN"},
 			Usage:   "InfluxDB token",
 			Value:   "",
 		},
 		&cli.StringFlag{
-			Name:    "databaseip",
+			Name:    "dbip",
 			EnvVars: []string{"INFLUXDB_IP"},
 			Usage:   "InfluxDB IP",
 			Value:   "localhost",
 		},
 		&cli.StringFlag{
-			Name:    "databaseport",
+			Name:    "dbport",
 			EnvVars: []string{"INFLUXDB_PORT"},
 			Usage:   "InfluxDB port",
 			Value:   "8086",
@@ -152,11 +152,16 @@ func parseTime(timeString string) time.Duration {
 	}
 	return 0
 }
+
 func fill(ctx *cli.Context) error {
 	// Validate ctx.Args contains at least one file
 	if ctx.NArg() == 0 {
 		return cli.Exit("Missing file(s)", 1)
 	}
+	if ctx.String("dbtoken") == "" {
+		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
+	}
+
 	for _, file := range ctx.Args().Slice() {
 		// Validate the files exist
 		if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -178,9 +183,17 @@ func fill(ctx *cli.Context) error {
 	}
 
 	var wg sync.WaitGroup
+
+	// Parse the flags
 	startAt := parseTime(ctx.String("startat"))
 	duration := parseTime(ctx.String("duration"))
 	gap := parseTime(ctx.String("gap"))
+
+	var influxDBApi = simba.InfluxDBApi{
+		Token: ctx.String("dbtoken"),
+		Url:   fmt.Sprintf("http://%s:%s", ctx.String("dbip"), ctx.String("dbport")),
+	}
+
 	for _, file := range ctx.Args().Slice() {
 		wg.Add(1)
 		go func(filePath string) {
@@ -192,7 +205,7 @@ func fill(ctx *cli.Context) error {
 			if duration != 0 {
 				metric.SliceBetween(startAt, duration)
 			}
-			simba.WriteMetrics(*metric, gap)
+			influxDBApi.WriteMetrics(*metric, gap)
 		}(file)
 
 	}
