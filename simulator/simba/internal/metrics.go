@@ -67,22 +67,6 @@ func (m Metric) ToMap() map[string]interface{} {
 		"server-up":               m.Server_Up,
 	}
 }
-func (sm *SystemMetric) SliceBetween(duration, startAt time.Duration) {
-
-	var startIndex int
-	endIndex := len(sm.Metrics)
-	for i, m := range sm.Metrics {
-		if time.Second*time.Duration(m.Timestamp) >= startAt {
-			startIndex = i
-		}
-	}
-	for i, m := range sm.Metrics[startIndex:] {
-		if (time.Second*time.Duration(m.Timestamp) - startAt) == duration {
-			endIndex = i
-		}
-	}
-	sm.Metrics = sm.Metrics[startIndex:endIndex]
-}
 
 func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 
