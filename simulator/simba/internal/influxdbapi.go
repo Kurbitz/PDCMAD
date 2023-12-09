@@ -1,6 +1,7 @@
 package simba
 
 import (
+	"log"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -18,6 +19,9 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
+	if time.Duration(time.Duration.Seconds(gap)) > time.Duration(m.Metrics[len(m.Metrics)-1].Timestamp) {
+		log.Fatal("Gap exceeds length of the metric file")
+	}
 	now := time.Now().Local()
 	end := now.Add(-gap)
 	then := end.Add(time.Second * time.Duration(-m.Metrics[len(m.Metrics)-1].Timestamp))

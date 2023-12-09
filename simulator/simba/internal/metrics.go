@@ -1,6 +1,7 @@
 package simba
 
 import (
+	"log"
 	"os"
 	"time"
 
@@ -72,6 +73,10 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 
 	startIndex := 0
 	endIndex := len(sm.Metrics)
+
+	if time.Duration(time.Duration.Seconds(duration+startAt)) > time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) {
+		log.Fatal("Duration exceeds length of the metric file")
+	}
 	// Find the first metric that is after the startAt time
 	for i, m := range sm.Metrics {
 		if time.Second*time.Duration(m.Timestamp) >= startAt {
