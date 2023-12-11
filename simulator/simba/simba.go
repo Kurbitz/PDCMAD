@@ -134,11 +134,11 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	//res := r.FindString(timeString)
 	match := r.FindStringSubmatch(ds)
 	if len(match) == 0 {
-		return 0, fmt.Errorf("Invalid time string: %s", ds)
+		return 0, fmt.Errorf("invalid time string: %s", ds)
 	}
 	amount, err := strconv.Atoi(match[1])
 	if err != nil {
-		return 0, fmt.Errorf("Invalid time string: %s", ds)
+		return 0, fmt.Errorf("invalid time string: %s", ds)
 	}
 
 	switch match[2] {
@@ -150,7 +150,7 @@ func ParseDurationString(ds string) (time.Duration, error) {
 		return (time.Minute * time.Duration(amount)), nil
 
 	}
-	return 0, fmt.Errorf("Invalid time string: %s", ds)
+	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
 func fill(ctx *cli.Context) error {
