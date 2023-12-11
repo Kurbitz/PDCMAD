@@ -125,20 +125,20 @@ func main() {
 // FIXME: Add a parameters for, duration, etc.
 // The fill command reads the files and sends them to InfluxDB
 // The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
-func ParseTimeString(timeString string) (time.Duration, error) {
+func ParseDurationString(ds string) (time.Duration, error) {
 
-	if timeString == "" {
+	if ds == "" {
 		return 0, nil
 	}
 	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
 	//res := r.FindString(timeString)
-	match := r.FindStringSubmatch(timeString)
+	match := r.FindStringSubmatch(ds)
 	if len(match) == 0 {
-		return 0, fmt.Errorf("Invalid time string: %s", timeString)
+		return 0, fmt.Errorf("Invalid time string: %s", ds)
 	}
 	amount, err := strconv.Atoi(match[1])
 	if err != nil {
-		return 0, fmt.Errorf("Invalid time string: %s", timeString)
+		return 0, fmt.Errorf("Invalid time string: %s", ds)
 	}
 
 	switch match[2] {
@@ -150,7 +150,7 @@ func ParseTimeString(timeString string) (time.Duration, error) {
 		return (time.Minute * time.Duration(amount)), nil
 
 	}
-	return 0, fmt.Errorf("Invalid time string: %s", timeString)
+	return 0, fmt.Errorf("Invalid time string: %s", ds)
 }
 
 func fill(ctx *cli.Context) error {
@@ -185,15 +185,15 @@ func fill(ctx *cli.Context) error {
 	var wg sync.WaitGroup
 
 	// Parse the flags
-	duration, err := ParseTimeString(ctx.String("duration"))
+	duration, err := ParseDurationString(ctx.String("duration"))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	startAt, err := ParseTimeString(ctx.String("startat"))
+	startAt, err := ParseDurationString(ctx.String("startat"))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	gap, err := ParseTimeString(ctx.String("gap"))
+	gap, err := ParseDurationString(ctx.String("gap"))
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
