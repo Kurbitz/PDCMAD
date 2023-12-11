@@ -122,9 +122,9 @@ func main() {
 
 }
 
-// FIXME: Add a parameters for, duration, etc.
-// The fill command reads the files and sends them to InfluxDB
-// The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
+// ParseDurationString parses a string like 1d, 1h or 1m and returns a time.Duration
+// Supports days, hours and minutes (d, h, m)
+// Does not return an error if the string is empty, instead it returns 0. This is to allow for default values.
 func ParseDurationString(ds string) (time.Duration, error) {
 
 	if ds == "" {
@@ -153,6 +153,8 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
+// The fill command reads the files and sends them to InfluxDB
+// The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
 func fill(ctx *cli.Context) error {
 	// Validate ctx.Args contains at least one file
 	if ctx.NArg() == 0 {
