@@ -69,6 +69,8 @@ func (m Metric) ToMap() map[string]interface{} {
 	}
 }
 
+// SliceBetween returns a slice of metrics between the startAt time and the duration
+// If duration is 0, it will return all metrics after the startAt time
 func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 
 	startIndex := 0
