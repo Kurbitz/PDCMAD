@@ -214,9 +214,10 @@ func fill(ctx *cli.Context) error {
 			// FIXME: Use better ID
 			id := filepath.Base(filePath)[:len(filepath.Base(filePath))-len(filepath.Ext(filePath))]
 			metric, _ := simba.ReadFromFile(filePath, id)
-			if duration != 0 {
-				metric.SliceBetween(startAt, duration)
-			}
+
+			// Slice the metric between startAt and duration
+			// If the parameters are 0, it will return all metrics, so we don't need to check for that
+			metric.SliceBetween(startAt, duration)
 			influxDBApi.WriteMetrics(*metric, gap)
 		}(file)
 
