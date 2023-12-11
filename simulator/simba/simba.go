@@ -201,10 +201,7 @@ func fill(ctx *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 
-	var influxDBApi = simba.InfluxDBApi{
-		Token: ctx.String("dbtoken"),
-		Url:   fmt.Sprintf("http://%s:%s", ctx.String("dbip"), ctx.String("dbport")),
-	}
+	var influxDBApi = simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
 
 	for _, file := range ctx.Args().Slice() {
 		wg.Add(1)

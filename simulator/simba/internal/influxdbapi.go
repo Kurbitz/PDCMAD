@@ -12,6 +12,13 @@ type InfluxDBApi struct {
 	Url   string
 }
 
+func NewInfluxDBApi(token, host, port string) InfluxDBApi {
+	return InfluxDBApi{
+		Token: token,
+		Url:   "http://" + host + ":" + port,
+	}
+}
+
 func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	client := influxdb2.NewClient(i.Url, i.Token)
 
