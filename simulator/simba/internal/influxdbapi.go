@@ -1,20 +1,37 @@
 package simba
 
 import (
+	"log"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-func WriteMetric(m SystemMetric) error {
-	// FIXME: Hide API key, maybe .env file?
-	client := influxdb2.NewClient("http://localhost:8086", "secret")
+type InfluxDBApi struct {
+	Token string
+	Url   string
+}
+
+func NewInfluxDBApi(token, host, port string) InfluxDBApi {
+	return InfluxDBApi{
+		Token: token,
+		Url:   "http://" + host + ":" + port,
+	}
+}
+
+func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
+	client := influxdb2.NewClient(i.Url, i.Token)
+	defer client.Close()
 	writeAPI := client.WriteAPI("test", "metrics")
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
+	if time.Duration(time.Duration.Seconds(gap)) > time.Duration(m.Metrics[len(m.Metrics)-1].Timestamp) {
+		log.Fatal("Gap exceeds length of the metric file")
+	}
 	now := time.Now().Local()
-	then := now.Add(time.Second * time.Duration(-m.Metrics[len(m.Metrics)-1].Timestamp))
+	end := now.Add(-gap)
+	then := end.Add(time.Second * time.Duration(-m.Metrics[len(m.Metrics)-1].Timestamp))
 
 	// Send all metrics to InfluxDB asynchronously
 	for _, x := range m.Metrics {
