@@ -14,13 +14,6 @@ type metric struct {
 	Data float64 `json:"data"`
 }
 
-// Getter that could be adjusted for API later
-func (m *metric) getID() (string, error) {
-	foo := &m.ID
-	*foo = "5"
-	return m.ID, nil
-}
-
 var metrics = []metric{
 	{ID: "1", Host: "server9000", Data: 123.231341},
 	{ID: "2", Host: "server9001", Data: 0},
