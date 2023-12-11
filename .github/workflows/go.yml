@@ -24,3 +24,7 @@ jobs:
     - name: Build
       working-directory: ./simulator/simba/
       run: go build -v -race .
+
+    - name: Build
+      working-directory: ./anomaly_detection/nala
+      run: go build -v -race .
