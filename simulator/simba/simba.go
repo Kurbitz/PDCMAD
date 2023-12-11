@@ -125,32 +125,32 @@ func main() {
 // FIXME: Add a parameters for, duration, etc.
 // The fill command reads the files and sends them to InfluxDB
 // The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
-func parseTime(timeString string) time.Duration {
+func ParseTimeString(timeString string) (time.Duration, error) {
 
 	if timeString == "" {
-		return 0
+		return 0, nil
 	}
 	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
 	//res := r.FindString(timeString)
 	match := r.FindStringSubmatch(timeString)
 	if len(match) == 0 {
-		return 0
+		return 0, fmt.Errorf("Invalid time string: %s", timeString)
 	}
 	amount, err := strconv.Atoi(match[1])
 	if err != nil {
-		panic(err)
+		return 0, fmt.Errorf("Invalid time string: %s", timeString)
 	}
 
 	switch match[2] {
 	case "d":
-		return ((time.Hour * 24) * time.Duration(amount))
+		return ((time.Hour * 24) * time.Duration(amount)), nil
 	case "h":
-		return ((time.Hour) * time.Duration(amount))
+		return ((time.Hour) * time.Duration(amount)), nil
 	case "m":
-		return (time.Minute * time.Duration(amount))
+		return (time.Minute * time.Duration(amount)), nil
 
 	}
-	return 0
+	return 0, fmt.Errorf("Invalid time string: %s", timeString)
 }
 
 func fill(ctx *cli.Context) error {
@@ -185,9 +185,18 @@ func fill(ctx *cli.Context) error {
 	var wg sync.WaitGroup
 
 	// Parse the flags
-	startAt := parseTime(ctx.String("startat"))
-	duration := parseTime(ctx.String("duration"))
-	gap := parseTime(ctx.String("gap"))
+	duration, err := ParseTimeString(ctx.String("duration"))
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	startAt, err := ParseTimeString(ctx.String("startat"))
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	gap, err := ParseTimeString(ctx.String("gap"))
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
 
 	var influxDBApi = simba.InfluxDBApi{
 		Token: ctx.String("dbtoken"),
