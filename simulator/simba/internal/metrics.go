@@ -87,7 +87,7 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 		}
 	}
 	// If duration is 0 or the duration is longer than the last metric, return the all metrics after the startAt time
-	lastTimestamp := time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp)
+	lastTimestamp := time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) * time.Second
 	if duration == 0 || startAt+duration >= lastTimestamp {
 		sm.Metrics = sm.Metrics[startIndex:]
 		return
