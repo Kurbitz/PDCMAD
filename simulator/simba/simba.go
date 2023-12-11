@@ -126,16 +126,16 @@ func main() {
 // Supports days, hours and minutes (d, h, m)
 // Does not return an error if the string is empty, instead it returns 0. This is to allow for default values.
 func ParseDurationString(ds string) (time.Duration, error) {
-
 	if ds == "" {
 		return 0, nil
 	}
 	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
-	//res := r.FindString(timeString)
+
 	match := r.FindStringSubmatch(ds)
 	if len(match) == 0 {
 		return 0, fmt.Errorf("invalid time string: %s", ds)
 	}
+
 	amount, err := strconv.Atoi(match[1])
 	if err != nil {
 		return 0, fmt.Errorf("invalid time string: %s", ds)
@@ -150,6 +150,7 @@ func ParseDurationString(ds string) (time.Duration, error) {
 		return (time.Minute * time.Duration(amount)), nil
 
 	}
+
 	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
