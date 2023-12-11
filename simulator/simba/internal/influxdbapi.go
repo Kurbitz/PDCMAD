@@ -21,7 +21,7 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 
 func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	client := influxdb2.NewClient(i.Url, i.Token)
-
+	defer client.Close()
 	writeAPI := client.WriteAPI("test", "metrics")
 
 	// Find the newest timestamp and go that many seconds back in time
@@ -43,6 +43,5 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Write any remaining points
 	writeAPI.Flush()
 	// FIXME: Handle errors
-	client.Close()
 	return nil
 }
