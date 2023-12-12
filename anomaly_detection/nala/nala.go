@@ -45,10 +45,19 @@ type Metric struct {
 	Cpu_User                float64 `csv:"cpu-user"`
 	Server_Up               int64   `csv:"server-up"`
 }
+// ! Delete later
+type Message struct {
+	Msg string `json:"msg"`
+}
+
+// TODO Create a trigger endpoint
+func triggerDetection(ctx *gin.Context) {
+	var message = Message{Msg: "Detection triggered"}
+	ctx.IndentedJSON(http.StatusOK, message)
 }
 
 func main() {
 	router := gin.Default()
-	router.GET("/metrics", getMetrics)
+	router.GET("/metrics", triggerDetection)
 	router.Run("localhost:8088")
 }
