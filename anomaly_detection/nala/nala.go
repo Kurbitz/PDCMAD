@@ -12,13 +12,6 @@ type System struct {
 	Metrics []*Metric
 }
 
-// Getter that could be adjusted for API later
-func (m *metric) getID() (string, error) {
-	foo := &m.ID
-	*foo = "5"
-	return m.ID, nil
-}
-
 type Metric struct {
 	Timestamp               int64   `csv:"timestamp"`
 	Load1m                  float64 `csv:"load-1m"`
@@ -45,6 +38,7 @@ type Metric struct {
 	Cpu_User                float64 `csv:"cpu-user"`
 	Server_Up               int64   `csv:"server-up"`
 }
+
 // ! Delete later
 type Message struct {
 	Msg string `json:"msg"`
