@@ -58,6 +58,6 @@ func triggerDetection(ctx *gin.Context) {
 
 func main() {
 	router := gin.Default()
-	router.GET("/metrics", triggerDetection)
+	router.GET("/nala/trigger", triggerDetection)
 	router.Run("localhost:8088")
 }
