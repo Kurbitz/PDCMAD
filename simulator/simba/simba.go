@@ -78,10 +78,7 @@ func main() {
 						Name:      "stream",
 						Usage:     "stream data from file(s) in real time to the database",
 						ArgsUsage: "<file1> <file2> ...",
-						Action: func(ctx *cli.Context) error {
-							fmt.Println("simulate stream")
-							return nil
-						},
+						Action:    stream,
 						Flags: append(simulateFlags, &cli.IntFlag{
 							Name:  "timemultiplier",
 							Value: 1,
@@ -156,6 +153,89 @@ func ParseDurationString(ds string) (time.Duration, error) {
 
 // The fill command reads the files and sends them to InfluxDB
 // The files are passed as arguments to the application (simba fill file1.csv file2.csv etc.)
+func stream(ctx *cli.Context) error {
+
+	if ctx.NArg() == 0 {
+		return cli.Exit("Missing file(s)", 1)
+	}
+	if ctx.String("dbtoken") == "" {
+		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
+	}
+
+	for _, file := range ctx.Args().Slice() {
+		// Validate the files exist
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			return cli.Exit(fmt.Sprintf("File %s does not exist", file), 1)
+		}
+		// Validate the files are not directories
+		if info, err := os.Stat(file); err == nil && info.IsDir() {
+			return cli.Exit(fmt.Sprintf("File %s is a directory", file), 1)
+		}
+		// Validate the files are .csv files
+		if filepath.Ext(file) != ".csv" {
+			return cli.Exit(fmt.Sprintf("File %s is not a .csv file", file), 1)
+		}
+		// Validate the files are not empty
+		if info, err := os.Stat(file); err == nil && info.Size() == 0 {
+			return cli.Exit(fmt.Sprintf("File %s is empty", file), 1)
+		}
+
+	}
+
+	// Parse the flags
+	duration, err := ParseDurationString(ctx.String("duration"))
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	startAt, err := ParseDurationString(ctx.String("startat"))
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	gap, err := ParseDurationString(ctx.String("gap"))
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	var influxDBApi = simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
+	fmt.Println(duration, startAt, gap, influxDBApi) // remove
+	file := ctx.Args().Slice()[0]
+	id := filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
+	//metric, _ := simba.ReadFromFile(file, id)
+	// FIXME: Handle missing timestamps
+	ticker := time.NewTicker(time.Second * 5)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	now := time.Now()
+
+	lastMetric, err := influxDBApi.GetLastMetric(id)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	lastTime := time.Second * time.Duration(lastMetric.Timestamp)
+	println(lastTime)
+
+	go func() {
+		for {
+			select {
+			case t := <-ticker.C:
+				fmt.Println("Tick at", t)
+				if t.After(now.Add(time.Second * 15)) {
+					fmt.Println("done")
+					wg.Done()
+					return
+				}
+			}
+		}
+	}()
+
+	wg.Wait()
+	ticker.Stop()
+
+	return nil
+}
 func fill(ctx *cli.Context) error {
 	// Validate ctx.Args contains at least one file
 	if ctx.NArg() == 0 {
@@ -202,6 +282,7 @@ func fill(ctx *cli.Context) error {
 	}
 
 	var influxDBApi = simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
+	defer influxDBApi.Close()
 
 	for _, file := range ctx.Args().Slice() {
 		wg.Add(1)
