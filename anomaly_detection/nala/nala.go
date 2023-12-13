@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "fmt"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,7 +40,7 @@ func pyCall() {
 }
 
 func main() {
-	pyCall() // idk need to have it somewhere
+	pyCall()
 	router := gin.Default()
 	router.GET("/metrics", getMetrics)
 	router.Run("localhost:8088")
