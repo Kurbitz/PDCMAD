@@ -1,6 +1,8 @@
 package simba
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -43,5 +45,91 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Write any remaining points
 	writeAPI.Flush()
 	// FIXME: Handle errors
+	return nil
+}
+
+/* Initial implementation deleted the bucket but then caused errors when simulating
+new data since the bucket didn't exist. ¿Would it be better to instead delete only the contents?*/
+// Deletes the bucket whose name matches with b
+/*func (i InfluxDBApi) DeleteBucket(b string) error {
+	client := influxdb2.NewClient(i.Url, i.Token)
+	defer client.Close()
+	bucketsAPI := client.BucketsAPI()
+
+	bucketInfo, err := bucketsAPI.FindBucketByName(context.Background(), b)
+	if err != nil {
+		fmt.Printf("Error funding bucket: %s\n", err)
+		return err
+	}
+
+	err = bucketsAPI.DeleteBucket(context.Background(), bucketInfo)
+	if err != nil {
+		fmt.Printf("Error deleting bucket: %s\n", err)
+		return err
+	}
+
+	fmt.Printf("Bucket \"%s\" deleted succesfully\n", b)
+	return nil
+}*/
+
+func (i InfluxDBApi) DeleteBucket(b string) error {
+	var err error = nil
+
+	client := influxdb2.NewClient(i.Url, i.Token)
+	defer client.Close()
+
+	//TODO: allow org selection
+	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), "test")
+	if err != nil {
+		fmt.Printf("Error retrieving organization: %s\n", err)
+		return err
+	}
+
+	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), b)
+	if err != nil {
+		fmt.Printf("Error retrieving bucket '%s': %s\n", b, err)
+		return err
+	}
+
+	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Unix(0, 0), time.Now(), "")
+	if err != nil {
+		fmt.Printf("Error deleting contents of bucket '%s': %s\n", b, err)
+		return err
+	}
+
+	fmt.Printf("Data from bucket '%s' deleted succesfully\n", b)
+
+	return nil
+}
+
+func (i InfluxDBApi) DeleteHost(b string, h string) error {
+	var err error = nil
+
+	client := influxdb2.NewClient(i.Url, i.Token)
+	defer client.Close()
+
+	//TODO: allow org selection
+	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), "test")
+	if err != nil {
+		fmt.Printf("Error retrieving organization: %s\n", err)
+		return err
+	}
+
+	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), b)
+	if err != nil {
+		fmt.Printf("Error retrieving bucket '%s': %s\n", b, err)
+		return err
+	}
+
+	predicate := fmt.Sprintf(`host="%s"`, h)
+
+	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Unix(0, 0), time.Now(), predicate)
+	if err != nil {
+		fmt.Printf("Error deleting host '%s': %s\n", h, err)
+		return err
+	}
+
+	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, b)
+
 	return nil
 }
