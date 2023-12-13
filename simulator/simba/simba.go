@@ -1,5 +1,7 @@
 package main
 
+// DBTOKEN: pJtsYfVHcRpuHOYcVRa7PPDy9aB1bDXTb23TJi4_vMtagT2p-s5ez9ENEAAIJ970KVqGDck_ttoEV_6W7l-Gsw==
+
 import (
 	"fmt"
 	"log"
@@ -53,6 +55,32 @@ func main() {
 		},
 	}
 
+	cleanFlags := []cli.Flag{
+		&cli.StringFlag{
+			Name:    "dbtoken",
+			EnvVars: []string{"INFLUXDB_TOKEN"},
+			Usage:   "InfluxDB token",
+			Value:   "",
+		},
+		&cli.StringFlag{
+			Name:    "dbip",
+			EnvVars: []string{"INFLUXDB_IP"},
+			Usage:   "InfluxDB IP",
+			Value:   "localhost",
+		},
+		&cli.StringFlag{
+			Name:    "dbport",
+			EnvVars: []string{"INFLUXDB_PORT"},
+			Usage:   "InfluxDB port",
+			Value:   "8086",
+		},
+		&cli.StringFlag{
+			Name:  "host",
+			Usage: "Host/system to delete",
+			Value: "",
+		},
+	}
+
 	app := &cli.App{
 		Name:  "simba",
 		Usage: "Simulate metrics etc.",
@@ -91,12 +119,11 @@ func main() {
 			},
 
 			{
-				Name:  "clean",
-				Usage: "Clean the database",
-				Action: func(ctx *cli.Context) error {
-					fmt.Println("clean")
-					return nil
-				},
+				Name:      "clean",
+				Usage:     "Clean the database",
+				Flags:     cleanFlags,
+				ArgsUsage: "<bucket>",
+				Action:    clean,
 			},
 			{
 				Name:  "trigger",
@@ -221,4 +248,33 @@ func fill(ctx *cli.Context) error {
 	}
 	wg.Wait()
 	return nil
+}
+
+// The clean command removes either the entire specified bucket
+// or all the data from a specific host from the bucket
+func clean(ctx *cli.Context) error {
+	// Validate ctx.Args contains at least one file
+	if ctx.NArg() == 0 {
+		return cli.Exit("Missing file(s)", 1)
+	}
+	if ctx.String("dbtoken") == "" {
+		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
+	}
+
+	bucket := ctx.Args().First()
+	if bucket == "" {
+		fmt.Println("No bucket selected")
+		return nil
+	}
+
+	var influxDBApi = simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
+
+	host := ctx.String("host")
+
+	if host == "" {
+		return influxDBApi.DeleteBucket(bucket)
+	}
+
+	return influxDBApi.DeleteHost(bucket, host)
+
 }
