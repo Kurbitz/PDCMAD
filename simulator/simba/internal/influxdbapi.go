@@ -39,6 +39,8 @@ func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Send all metrics to InfluxDB asynchronously
 	for _, x := range m.Metrics {
 		current := then.Add(time.Second * time.Duration(x.Timestamp))
+		// Set the timestamp to the current Unix timestamp
+		x.Timestamp = current.Unix()
 		p := influxdb2.NewPoint(measurement, map[string]string{"host": m.Id}, x.ToMap(), current)
 		writeAPI.WritePoint(p)
 	}
