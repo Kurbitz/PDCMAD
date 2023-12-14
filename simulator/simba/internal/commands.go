@@ -38,6 +38,16 @@ func Stream(flags StreamArgs) error {
 
 	insertTime := time.Now()
 
+	// If append is set we need to get the last metric and start from there
+	// else we start from now
+	if flags.Append {
+		lastMetric, err := influxDBApi.GetLastMetric(id)
+		if err != nil {
+			return err
+		}
+
+		insertTime = time.Unix(lastMetric.Timestamp, 0)
+	}
 
 	metrics, err := ReadFromFile(flags.File, id)
 	if err != nil {
