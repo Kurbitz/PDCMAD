@@ -258,6 +258,12 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	}, nil
 }
 
+// FIXME: Use better ID
+func GetIdFromFileName(file string) string {
+	// Remove the file extension from the base file name
+	return filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
+}
+
 // The invokeStream command reads a single file and sends them to InfluxDB in real time
 // The file is passed as an argument to the application (simba invokeStream file.csv)
 func invokeStream(ctx *cli.Context) error {

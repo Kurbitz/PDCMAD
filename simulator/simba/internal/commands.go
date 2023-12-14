@@ -15,9 +15,8 @@ func Fill(flags FillFlags) error {
 		wg.Add(1)
 		go func(filePath string) {
 			defer wg.Done()
-			// Remove the .csv from the file name
-			// FIXME: Use better ID
-			id := filepath.Base(filePath)[:len(filepath.Base(filePath))-len(filepath.Ext(filePath))]
+
+			id := GetIdFromFileName(filePath)
 			metric, _ := ReadFromFile(filePath, id)
 
 			// Slice the metric between startAt and duration
