@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// FillFlags is a struct containing the flags passed to the fill command
 type FillFlags struct {
 	DBToken  string
 	DBIp     string
@@ -21,6 +22,7 @@ type FillFlags struct {
 	Files    []string
 }
 
+// StreamArgs is a struct containing the flags passed to the stream command
 type StreamArgs struct {
 	DBToken        string
 	DBIp           string
@@ -32,6 +34,7 @@ type StreamArgs struct {
 	File           string
 }
 
+// Common flags for the simulate command
 var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "dbtoken",
@@ -63,6 +66,8 @@ var simulateFlags = []cli.Flag{
 	},
 }
 
+// App is the main application
+// All commands and flags are defined here
 var App = &cli.App{
 	Name:  "simba",
 	Usage: "Simulate metrics etc.",
@@ -103,7 +108,6 @@ var App = &cli.App{
 				},
 			},
 		},
-
 		{
 			Name:  "clean",
 			Usage: "Clean the database",
@@ -138,7 +142,6 @@ func ParseDurationString(ds string) (time.Duration, error) {
 		return 0, nil
 	}
 	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
-
 	match := r.FindStringSubmatch(ds)
 	if len(match) == 0 {
 		return 0, fmt.Errorf("invalid time string: %s", ds)
@@ -198,10 +201,10 @@ func ParseFillFlags(ctx *cli.Context) (*FillFlags, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file(s). See -h for help")
 	}
-
 	// Validate the files
 	files := ctx.Args().Slice()
 	for _, file := range files {
@@ -209,6 +212,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillFlags, error) {
 			return nil, err
 		}
 	}
+
 	return &FillFlags{
 		DBToken:  ctx.String("dbtoken"),
 		DBIp:     ctx.String("dbip"),
@@ -236,7 +240,6 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}
-
 	file := ctx.Args().Slice()[0]
 	err = ValidateFile(file)
 	if err != nil {
@@ -278,7 +281,6 @@ func invokeFill(ctx *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-
 	if err := Fill(*flags); err != nil {
 		return cli.Exit(err, 1)
 	}
