@@ -1,8 +1,9 @@
 package simba
 
 import (
-	"path/filepath"
+	"log"
 	"sync"
+	"time"
 )
 
 func Fill(flags FillFlags) error {
@@ -32,6 +33,34 @@ func Fill(flags FillFlags) error {
 }
 
 func Stream(flags StreamArgs) error {
+	var influxDBApi = NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
+	id := GetIdFromFileName(flags.File)
+
+	insertTime := time.Now()
+
+
+	metrics, err := ReadFromFile(flags.File, id)
+	if err != nil {
+		return err
+	}
+	metrics.SliceBetween(flags.Startat, flags.Duration)
+
+	// Insert all metrics except the last one
+	for i, metric := range metrics.Metrics[:len(metrics.Metrics)-1] {
+		if insertTime.After(time.Now()) {
+			log.Println("You have exceeded the current time. The time multiplier might be too high, exiting...")
+			return nil
+		}
+		influxDBApi.WriteMetric(*metric, id, insertTime)
+		log.Println("Inserted metric at", insertTime)
+
+		timeDelta := (metrics.Metrics[i+1].Timestamp - metric.Timestamp)
+		insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
+
+		time.Sleep((time.Second * time.Duration(timeDelta)) / time.Duration(flags.TimeMultiplier))
+	}
+	// Handle the last metric
+	influxDBApi.WriteMetric(*metrics.Metrics[len(metrics.Metrics)-1], id, insertTime)
 
 	return nil
 }
