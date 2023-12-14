@@ -1,6 +1,9 @@
 package simba
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -23,6 +26,37 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 		influxdb2.NewClient("http://"+host+":"+port, token),
 	}
 }
+
+// FIXME: There is probably a better way to do this, we need to test this thoroughly
+func (i InfluxDBApi) GetLastMetric(host string) (*Metric, error) {
+	q := i.QueryAPI(org)
+	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", bucket, measurement, host)
+	result, err := q.Query(context.Background(), query)
+
+	results := make(map[string]interface{}, 0)
+
+	if err != nil {
+		return nil, err
+	}
+	for result.Next() {
+		results[result.Record().Field()] = result.Record().Value()
+	}
+
+	j, err := json.Marshal(results)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(string(j))
+
+	metric := Metric{}
+	if err := json.Unmarshal(j, &metric); err != nil {
+		return nil, err
+	}
+
+	return &metric, nil
+}
+
 
 func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	writeAPI := api.WriteAPI(org, bucket)
