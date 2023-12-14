@@ -7,22 +7,25 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
+// FIXME: Move to config file or something
+const (
+	org         = "pdc-mad"
+	bucket      = "simba"
+	measurement = "test"
+)
+
 type InfluxDBApi struct {
-	Token string
-	Url   string
+	influxdb2.Client
 }
 
 func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 	return InfluxDBApi{
-		Token: token,
-		Url:   "http://" + host + ":" + port,
+		influxdb2.NewClient("http://"+host+":"+port, token),
 	}
 }
 
-func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
-	client := influxdb2.NewClient(i.Url, i.Token)
-	defer client.Close()
-	writeAPI := client.WriteAPI("test", "metrics")
+func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
+	writeAPI := api.WriteAPI(org, bucket)
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
@@ -36,7 +39,7 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Send all metrics to InfluxDB asynchronously
 	for _, x := range m.Metrics {
 		current := then.Add(time.Second * time.Duration(x.Timestamp))
-		p := influxdb2.NewPoint("test", map[string]string{"host": m.Id}, x.ToMap(), current)
+		p := influxdb2.NewPoint(measurement, map[string]string{"host": m.Id}, x.ToMap(), current)
 		writeAPI.WritePoint(p)
 	}
 
