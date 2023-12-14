@@ -77,7 +77,7 @@ func main() {
 		&cli.StringFlag{
 			Name:  "startat",
 			Usage: "from where to delete relative to current time",
-			Value: "0d",
+			Value: "",
 		},
 	}
 
@@ -270,6 +270,8 @@ func fill(ctx *cli.Context) error {
 
 // The cleanBucket subcommand removes all the data inside the specified bucket
 func cleanBucket(ctx *cli.Context) error {
+	var start time.Duration
+	var err error
 	// Validate ctx.Args contains a bucket name
 	if ctx.NArg() == 0 {
 		return cli.Exit("Missing bucket name", 1)
@@ -281,14 +283,26 @@ func cleanBucket(ctx *cli.Context) error {
 
 	bucket := ctx.Args().First()
 
+	if ctx.String("startat") == "" {
+		start = time.Now().Local().Sub(time.Unix(0, 0))
+	} else {
+		start, err = ParseDurationString(ctx.String("startat"))
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
 	influxDBApi := simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
 
-	return influxDBApi.DeleteBucket(bucket)
+	return influxDBApi.DeleteBucket(bucket, start)
 }
 
 // The cleanHost subcommand removes all the data from the desired
 // hosts/systems inside the specified bucket
 func cleanHost(ctx *cli.Context) error {
+	var start time.Duration
+	var err error
+
 	// Validate ctx.Args contains at least a host/system name
 	if ctx.NArg() == 0 {
 		return cli.Exit("Missing host names", 1)
@@ -304,15 +318,23 @@ func cleanHost(ctx *cli.Context) error {
 		return cli.Exit("Bucket not specified. See -h for help", 1)
 	}
 
+	if ctx.String("startat") == "" {
+		start = time.Now().Local().Sub(time.Unix(0, 0))
+	} else {
+		start, err = ParseDurationString(ctx.String("startat"))
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+
 	influxDBApi := simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
 
 	var wg sync.WaitGroup
-
 	for _, host := range ctx.Args().Slice() {
 		wg.Add(1)
 		go func(hostName string, bucketName string) {
 			defer wg.Done()
-			influxDBApi.DeleteHost(bucket, hostName)
+			influxDBApi.DeleteHost(bucket, hostName, start)
 		}(host, bucket)
 	}
 	wg.Wait()

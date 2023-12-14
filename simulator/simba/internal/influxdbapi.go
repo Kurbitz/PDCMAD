@@ -74,7 +74,7 @@ new data since the bucket didn't exist. ¿Would it be better to instead delete o
 
 // Deletes all the metrics contained in bucket b in the time interval
 // defined by the current time and the range specified by t
-func (i InfluxDBApi) DeleteBucket(b string) error {
+func (i InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
 	var err error = nil
 
 	client := influxdb2.NewClient(i.Url, i.Token)
@@ -93,7 +93,7 @@ func (i InfluxDBApi) DeleteBucket(b string) error {
 		return err
 	}
 
-	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Unix(0, 0), time.Now(), "")
+	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
 	if err != nil {
 		fmt.Printf("Error deleting contents of bucket '%s': %s\n", b, err)
 		return err
@@ -104,7 +104,7 @@ func (i InfluxDBApi) DeleteBucket(b string) error {
 	return nil
 }
 
-func (i InfluxDBApi) DeleteHost(b string, h string) error {
+func (i InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
 	var err error = nil
 
 	client := influxdb2.NewClient(i.Url, i.Token)
@@ -125,7 +125,7 @@ func (i InfluxDBApi) DeleteHost(b string, h string) error {
 
 	predicate := fmt.Sprintf(`host="%s"`, h)
 
-	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Unix(0, 0), time.Now(), predicate)
+	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), predicate)
 	if err != nil {
 		fmt.Printf("Error deleting host '%s': %s\n", h, err)
 		return err
