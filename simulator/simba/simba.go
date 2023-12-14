@@ -153,9 +153,34 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
+func ValidateFile(file string) error {
+	// Validate the file exists
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return fmt.Errorf("File %s does not exist", file)
+	}
+	// Validate the file is not a directory
+	if info, err := os.Stat(file); err == nil && info.IsDir() {
+		return fmt.Errorf("File %s is a directory", file)
+	}
+	// Validate the file is a .csv files
+	if filepath.Ext(file) != ".csv" {
+		return fmt.Errorf("File %s is not a .csv file", file)
+	}
+	// Validate the file is not empty
+	if info, err := os.Stat(file); err == nil && info.Size() == 0 {
+		return fmt.Errorf("File %s is empty", file)
+	}
+	return nil
+}
+
 // The stream command reads a single file and sends them to InfluxDB in real time
 // The file is passed as an argument to the application (simba stream file.csv)
 func stream(ctx *cli.Context) error {
+	// Validate the file
+	file := ctx.Args().Slice()[0]
+	if err := ValidateFile(file); err != nil {
+		return cli.Exit(err, 1)
+	}
 	return nil
 }
 
@@ -171,23 +196,10 @@ func fill(ctx *cli.Context) error {
 	}
 
 	for _, file := range ctx.Args().Slice() {
-		// Validate the files exist
-		if _, err := os.Stat(file); os.IsNotExist(err) {
-			return cli.Exit(fmt.Sprintf("File %s does not exist", file), 1)
+		// Validate the file
+		if err := ValidateFile(file); err != nil {
+			return cli.Exit(err, 1)
 		}
-		// Validate the files are not directories
-		if info, err := os.Stat(file); err == nil && info.IsDir() {
-			return cli.Exit(fmt.Sprintf("File %s is a directory", file), 1)
-		}
-		// Validate the files are .csv files
-		if filepath.Ext(file) != ".csv" {
-			return cli.Exit(fmt.Sprintf("File %s is not a .csv file", file), 1)
-		}
-		// Validate the files are not empty
-		if info, err := os.Stat(file); err == nil && info.Size() == 0 {
-			return cli.Exit(fmt.Sprintf("File %s is empty", file), 1)
-		}
-
 	}
 
 	var wg sync.WaitGroup
