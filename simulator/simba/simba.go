@@ -14,6 +14,25 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type FillFlags struct {
+	dbtoken  string
+	dbip     string
+	dbport   string
+	duration time.Duration
+	startat  time.Duration
+	gap      time.Duration
+}
+
+type StreamFlags struct {
+	dbtoken        string
+	dbip           string
+	dbport         string
+	duration       time.Duration
+	startat        time.Duration
+	timeMultiplier int
+	append         bool
+}
+
 func main() {
 	// Define the CLI Commands and flags
 
@@ -173,14 +192,76 @@ func ValidateFile(file string) error {
 	return nil
 }
 
+func ParseFillFlags(ctx *cli.Context) (*FillFlags, error) {
+	if ctx.String("dbtoken") == "" {
+		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
+	}
+	duration, err := ParseDurationString(ctx.String("duration"))
+	if err != nil {
+		return nil, err
+	}
+	startAt, err := ParseDurationString(ctx.String("startat"))
+	if err != nil {
+		return nil, err
+	}
+	gap, err := ParseDurationString(ctx.String("gap"))
+	if err != nil {
+		return nil, err
+	}
+
+	return &FillFlags{
+		dbtoken:  ctx.String("dbtoken"),
+		dbip:     ctx.String("dbip"),
+		dbport:   ctx.String("dbport"),
+		duration: duration,
+		startat:  startAt,
+		gap:      gap,
+	}, nil
+}
+
+func ParseStreamFlags(ctx *cli.Context) (*StreamFlags, error) {
+	if ctx.String("dbtoken") == "" {
+		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
+	}
+	duration, err := ParseDurationString(ctx.String("duration"))
+	if err != nil {
+		return nil, err
+	}
+	startAt, err := ParseDurationString(ctx.String("startat"))
+	if err != nil {
+		return nil, err
+	}
+
+	return &StreamFlags{
+		dbtoken:        ctx.String("dbtoken"),
+		dbip:           ctx.String("dbip"),
+		dbport:         ctx.String("dbport"),
+		duration:       duration,
+		startat:        startAt,
+		timeMultiplier: ctx.Int("timemultiplier"),
+		append:         ctx.Bool("append"),
+	}, nil
+}
+
 // The stream command reads a single file and sends them to InfluxDB in real time
 // The file is passed as an argument to the application (simba stream file.csv)
 func stream(ctx *cli.Context) error {
+	if ctx.NArg() == 0 {
+		return cli.Exit("Missing file", 1)
+	}
+
 	// Validate the file
 	file := ctx.Args().Slice()[0]
 	if err := ValidateFile(file); err != nil {
 		return cli.Exit(err, 1)
 	}
+
+	// Parse the flags
+	flags, err := ParseStreamFlags(ctx)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+
 	return nil
 }
 
@@ -191,10 +272,6 @@ func fill(ctx *cli.Context) error {
 	if ctx.NArg() == 0 {
 		return cli.Exit("Missing file(s)", 1)
 	}
-	if ctx.String("dbtoken") == "" {
-		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
-	}
-
 	for _, file := range ctx.Args().Slice() {
 		// Validate the file
 		if err := ValidateFile(file); err != nil {
@@ -202,24 +279,15 @@ func fill(ctx *cli.Context) error {
 		}
 	}
 
-	var wg sync.WaitGroup
-
 	// Parse the flags
-	duration, err := ParseDurationString(ctx.String("duration"))
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	startAt, err := ParseDurationString(ctx.String("startat"))
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	gap, err := ParseDurationString(ctx.String("gap"))
+	flags, err := ParseFillFlags(ctx)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
 
-	var influxDBApi = simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
+	var influxDBApi = simba.NewInfluxDBApi(flags.dbtoken, flags.dbip, flags.dbport)
 
+	var wg sync.WaitGroup
 	for _, file := range ctx.Args().Slice() {
 		wg.Add(1)
 		go func(filePath string) {
@@ -231,8 +299,8 @@ func fill(ctx *cli.Context) error {
 
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
-			metric.SliceBetween(startAt, duration)
-			influxDBApi.WriteMetrics(*metric, gap)
+			metric.SliceBetween(flags.startat, flags.duration)
+			influxDBApi.WriteMetrics(*metric, flags.gap)
 		}(file)
 
 	}
