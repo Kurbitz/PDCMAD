@@ -75,9 +75,9 @@ func main() {
 			Value:   "8086",
 		},
 		&cli.StringFlag{
-			Name:  "host",
-			Usage: "Host/system to delete",
-			Value: "",
+			Name:  "startat",
+			Usage: "from where to delete relative to current time",
+			Value: "0d",
 		},
 	}
 
@@ -119,11 +119,29 @@ func main() {
 			},
 
 			{
-				Name:      "clean",
-				Usage:     "Clean the database",
-				Flags:     cleanFlags,
-				ArgsUsage: "<bucket>",
-				Action:    clean,
+				Name:  "clean",
+				Usage: "Clean the database",
+				Flags: cleanFlags,
+				Subcommands: []*cli.Command{
+					{
+						Name:      "bucket",
+						Usage:     "clean all the data inside the specified bucket",
+						ArgsUsage: "<bucket>",
+						Action:    cleanBucket,
+						Flags:     cleanFlags,
+					},
+					{
+						Name:      "host",
+						Usage:     "clean all the data from a host/system inside the specified bucket",
+						ArgsUsage: "<host1> <host2> ...",
+						Action:    cleanHost,
+						Flags: append(cleanFlags, &cli.StringFlag{
+							Name:  "bucket",
+							Usage: "Bucket from where to delete",
+							Value: "metrics",
+						}),
+					},
+				},
 			},
 			{
 				Name:  "trigger",
@@ -250,31 +268,54 @@ func fill(ctx *cli.Context) error {
 	return nil
 }
 
-// The clean command removes either the entire specified bucket
-// or all the data from a specific host from the bucket
-func clean(ctx *cli.Context) error {
-	// Validate ctx.Args contains at least one file
+// The cleanBucket subcommand removes all the data inside the specified bucket
+func cleanBucket(ctx *cli.Context) error {
+	// Validate ctx.Args contains a bucket name
 	if ctx.NArg() == 0 {
-		return cli.Exit("Missing file(s)", 1)
+		return cli.Exit("Missing bucket name", 1)
 	}
+
 	if ctx.String("dbtoken") == "" {
 		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
 	}
 
 	bucket := ctx.Args().First()
+
+	influxDBApi := simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
+
+	return influxDBApi.DeleteBucket(bucket)
+}
+
+// The cleanHost subcommand removes all the data from the desired
+// hosts/systems inside the specified bucket
+func cleanHost(ctx *cli.Context) error {
+	// Validate ctx.Args contains at least a host/system name
+	if ctx.NArg() == 0 {
+		return cli.Exit("Missing host names", 1)
+	}
+
+	if ctx.String("dbtoken") == "" {
+		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
+	}
+
+	// Validate that a bucket has been specified
+	bucket := ctx.String("bucket")
 	if bucket == "" {
-		fmt.Println("No bucket selected")
-		return nil
+		return cli.Exit("Bucket not specified. See -h for help", 1)
 	}
 
-	var influxDBApi = simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
+	influxDBApi := simba.NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
 
-	host := ctx.String("host")
+	var wg sync.WaitGroup
 
-	if host == "" {
-		return influxDBApi.DeleteBucket(bucket)
+	for _, host := range ctx.Args().Slice() {
+		wg.Add(1)
+		go func(hostName string, bucketName string) {
+			defer wg.Done()
+			influxDBApi.DeleteHost(bucket, hostName)
+		}(host, bucket)
 	}
+	wg.Wait()
 
-	return influxDBApi.DeleteHost(bucket, host)
-
+	return nil
 }

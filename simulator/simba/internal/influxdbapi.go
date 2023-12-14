@@ -72,6 +72,8 @@ new data since the bucket didn't exist. ¿Would it be better to instead delete o
 	return nil
 }*/
 
+// Deletes all the metrics contained in bucket b in the time interval
+// defined by the current time and the range specified by t
 func (i InfluxDBApi) DeleteBucket(b string) error {
 	var err error = nil
 
