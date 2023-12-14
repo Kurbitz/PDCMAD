@@ -46,11 +46,6 @@ func main() {
 			Usage: "Starting line in file",
 			Value: "",
 		},
-		&cli.StringFlag{
-			Name:  "gap",
-			Usage: "Gap to now",
-			Value: "",
-		},
 	}
 
 	app := &cli.App{
@@ -72,7 +67,11 @@ func main() {
 						Usage:     "fill the database with data from file(s)",
 						ArgsUsage: "<file1> <file2> ...",
 						Action:    fill,
-						Flags:     simulateFlags,
+						Flags: append(simulateFlags, &cli.StringFlag{
+							Name:  "gap",
+							Usage: "Gap to now",
+							Value: "",
+						}),
 					},
 					{
 						Name:      "stream",
@@ -85,6 +84,9 @@ func main() {
 						Flags: append(simulateFlags, &cli.IntFlag{
 							Name:  "timemultiplier",
 							Value: 1,
+						}, &cli.BoolFlag{
+							Name:  "append",
+							Value: false,
 						}),
 					},
 				},
