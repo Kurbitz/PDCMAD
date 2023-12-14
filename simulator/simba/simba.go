@@ -1,7 +1,5 @@
 package main
 
-// DBTOKEN: pJtsYfVHcRpuHOYcVRa7PPDy9aB1bDXTb23TJi4_vMtagT2p-s5ez9ENEAAIJ970KVqGDck_ttoEV_6W7l-Gsw==
-
 import (
 	"fmt"
 	"log"
@@ -121,7 +119,6 @@ func main() {
 			{
 				Name:  "clean",
 				Usage: "Clean the database",
-				Flags: cleanFlags,
 				Subcommands: []*cli.Command{
 					{
 						Name:      "bucket",
