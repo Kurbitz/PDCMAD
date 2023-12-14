@@ -48,30 +48,6 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	return nil
 }
 
-/* Initial implementation deleted the bucket but then caused errors when simulating
-new data since the bucket didn't exist. ¿Would it be better to instead delete only the contents?*/
-// Deletes the bucket whose name matches with b
-/*func (i InfluxDBApi) DeleteBucket(b string) error {
-	client := influxdb2.NewClient(i.Url, i.Token)
-	defer client.Close()
-	bucketsAPI := client.BucketsAPI()
-
-	bucketInfo, err := bucketsAPI.FindBucketByName(context.Background(), b)
-	if err != nil {
-		fmt.Printf("Error funding bucket: %s\n", err)
-		return err
-	}
-
-	err = bucketsAPI.DeleteBucket(context.Background(), bucketInfo)
-	if err != nil {
-		fmt.Printf("Error deleting bucket: %s\n", err)
-		return err
-	}
-
-	fmt.Printf("Bucket \"%s\" deleted succesfully\n", b)
-	return nil
-}*/
-
 // Deletes all the metrics contained in bucket b in the time interval
 // defined by the current time and the range specified by t
 func (i InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
@@ -104,6 +80,8 @@ func (i InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
 	return nil
 }
 
+// Deletes all the metrics from host/system h contained in bucket b in
+// the time interval defined by the current time and the range specified by t
 func (i InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
 	var err error = nil
 
