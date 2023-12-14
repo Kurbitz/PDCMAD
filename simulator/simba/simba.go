@@ -156,19 +156,19 @@ func ParseDurationString(ds string) (time.Duration, error) {
 func ValidateFile(file string) error {
 	// Validate the file exists
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		return fmt.Errorf("File %s does not exist", file)
+		return fmt.Errorf("file %s does not exist", file)
 	}
 	// Validate the file is not a directory
 	if info, err := os.Stat(file); err == nil && info.IsDir() {
-		return fmt.Errorf("File %s is a directory", file)
+		return fmt.Errorf("file %s is a directory", file)
 	}
 	// Validate the file is a .csv files
 	if filepath.Ext(file) != ".csv" {
-		return fmt.Errorf("File %s is not a .csv file", file)
+		return fmt.Errorf("file %s is not a .csv file", file)
 	}
 	// Validate the file is not empty
 	if info, err := os.Stat(file); err == nil && info.Size() == 0 {
-		return fmt.Errorf("File %s is empty", file)
+		return fmt.Errorf("file %s is empty", file)
 	}
 	return nil
 }
