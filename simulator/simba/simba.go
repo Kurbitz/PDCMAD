@@ -77,10 +77,7 @@ func main() {
 						Name:      "stream",
 						Usage:     "stream data from file(s) in real time to the database",
 						ArgsUsage: "<file1> <file2> ...",
-						Action: func(ctx *cli.Context) error {
-							fmt.Println("simulate stream")
-							return nil
-						},
+						Action:    stream,
 						Flags: append(simulateFlags, &cli.IntFlag{
 							Name:  "timemultiplier",
 							Value: 1,
@@ -154,6 +151,12 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	}
 
 	return 0, fmt.Errorf("invalid time string: %s", ds)
+}
+
+// The stream command reads a single file and sends them to InfluxDB in real time
+// The file is passed as an argument to the application (simba stream file.csv)
+func stream(ctx *cli.Context) error {
+	return nil
 }
 
 // The fill command reads the files and sends them to InfluxDB
