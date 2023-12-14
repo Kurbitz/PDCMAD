@@ -8,6 +8,7 @@ import (
 func Fill(flags FillFlags) error {
 
 	var influxDBApi = NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
+	defer influxDBApi.Close()
 
 	var wg sync.WaitGroup
 	for _, file := range flags.Files {
