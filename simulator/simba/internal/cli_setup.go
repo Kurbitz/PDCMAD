@@ -11,8 +11,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// FillFlags is a struct containing the flags passed to the fill command
-type FillFlags struct {
+// FillArgs is a struct containing the flags passed to the fill command
+type FillArgs struct {
 	DBToken  string
 	DBIp     string
 	DBPort   string
@@ -185,7 +185,7 @@ func ValidateFile(file string) error {
 	return nil
 }
 
-func ParseFillFlags(ctx *cli.Context) (*FillFlags, error) {
+func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if ctx.String("dbtoken") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
@@ -213,7 +213,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillFlags, error) {
 		}
 	}
 
-	return &FillFlags{
+	return &FillArgs{
 		DBToken:  ctx.String("dbtoken"),
 		DBIp:     ctx.String("dbip"),
 		DBPort:   ctx.String("dbport"),

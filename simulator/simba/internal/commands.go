@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-func Fill(flags FillFlags) error {
+func Fill(flags FillArgs) error {
 
 	var influxDBApi = NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
 	defer influxDBApi.Close()
