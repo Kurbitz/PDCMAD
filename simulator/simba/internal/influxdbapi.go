@@ -10,9 +10,12 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-var org = "PDC-MAD"
-var bucket = "metrics"
-var measurement = "test"
+// FIXME: Move to config file or something
+const (
+	org         = "PDC-MAD"
+	bucket      = "metrics"
+	measurement = "test"
+)
 
 type InfluxDBApi struct {
 	influxdb2.Client
@@ -23,13 +26,11 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 		influxdb2.NewClient("http://"+host+":"+port, token),
 	}
 }
-func (i InfluxDBApi) Close() {
-	i.Close()
-}
 
-func (i InfluxDBApi) GetLastMetric(id string) (*Metric, error) {
+// FIXME: There is probably a better way to do this, we need to test this thoroughly
+func (i InfluxDBApi) GetLastMetric(host string) (*Metric, error) {
 	q := i.QueryAPI(org)
-	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", bucket, measurement, id)
+	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", bucket, measurement, host)
 	result, err := q.Query(context.Background(), query)
 
 	results := make(map[string]interface{}, 0)
@@ -56,9 +57,9 @@ func (i InfluxDBApi) GetLastMetric(id string) (*Metric, error) {
 	return &metric, nil
 }
 
-func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
-
-	writeAPI := i.WriteAPI(org, bucket)
+func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
+	writeAPI := api.WriteAPI(org, bucket)
+	defer api.Close()
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
@@ -72,6 +73,9 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Send all metrics to InfluxDB asynchronously
 	for _, x := range m.Metrics {
 		current := then.Add(time.Second * time.Duration(x.Timestamp))
+
+		// Set the timestamp to the current Unix timestamp
+		x.Timestamp = current.Unix()
 		p := influxdb2.NewPoint(measurement, map[string]string{"host": m.Id}, x.ToMap(), current)
 		writeAPI.WritePoint(p)
 	}
@@ -79,5 +83,16 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Write any remaining points
 	writeAPI.Flush()
 	// FIXME: Handle errors
+	return nil
+}
+
+func (api InfluxDBApi) WriteMetric(m Metric, id string, timeStamp time.Time) error {
+	writeAPI := api.WriteAPI(org, bucket)
+
+	m.Timestamp = timeStamp.Unix()
+	p := influxdb2.NewPoint(measurement, map[string]string{"host": id}, m.ToMap(), timeStamp)
+
+	writeAPI.WritePoint(p)
+
 	return nil
 }
