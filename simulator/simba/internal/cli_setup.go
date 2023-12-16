@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -35,6 +34,15 @@ type StreamArgs struct {
 	File           string
 }
 
+// CleanArgs is a struct containing the flags passed to the clean command
+type CleanArgs struct {
+	DBToken string
+	DBIp    string
+	DBPort  string
+	All     bool
+	Startat time.Duration
+	Hosts   []string
+}
 
 // Common flags for the simulate command
 var simulateFlags = []cli.Flag{
@@ -68,6 +76,7 @@ var simulateFlags = []cli.Flag{
 	},
 }
 
+// Flags for the clean command
 var cleanFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:    "dbtoken",
@@ -91,6 +100,11 @@ var cleanFlags = []cli.Flag{
 		Name:  "startat",
 		Usage: "from where to delete relative to current time",
 		Value: "",
+	},
+	&cli.BoolFlag{
+		Name:  "all",
+		Usage: "delete metrics from all the hosts of the bucket",
+		Value: false,
 	},
 }
 
@@ -137,28 +151,11 @@ var App = &cli.App{
 			},
 		},
 		{
-			Name:  "clean",
-			Usage: "Clean the database",
-			Subcommands: []*cli.Command{
-				{
-					Name:      "bucket",
-					Usage:     "clean all the data inside the specified bucket",
-					ArgsUsage: "<bucket>",
-					Action:    cleanBucket,
-					Flags:     cleanFlags,
-				},
-				{
-					Name:      "host",
-					Usage:     "clean all the data from a host/system inside the specified bucket",
-					ArgsUsage: "<host1> <host2> ...",
-					Action:    cleanHost,
-					Flags: append(cleanFlags, &cli.StringFlag{
-						Name:  "bucket",
-						Usage: "Bucket from where to delete",
-						Value: "metrics",
-					}),
-				},
-			},
+			Name:      "clean",
+			Usage:     "Clean the database",
+			ArgsUsage: "<host1> <host2> ...",
+			Action:    invokeClean,
+			Flags:     cleanFlags,
 		},
 		{
 			Name:  "trigger",
@@ -302,6 +299,34 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	}, nil
 }
 
+func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
+	var startAt time.Duration
+	var err error
+	if ctx.String("dbtoken") == "" {
+		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
+	}
+
+	if ctx.String("startat") == "" {
+		startAt = time.Now().Local().Sub(time.Unix(0, 0))
+	} else {
+		startAt, err = ParseDurationString(ctx.String("startat"))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	hosts := ctx.Args().Slice()
+
+	return &CleanArgs{
+		DBToken: ctx.String("dbtoken"),
+		DBIp:    ctx.String("dbip"),
+		DBPort:  ctx.String("dbport"),
+		All:     ctx.Bool("all"),
+		Startat: startAt,
+		Hosts:   hosts,
+	}, nil
+}
+
 // The invokeStream command reads a single file and sends them to InfluxDB in real time
 // The file is passed as an argument to the application (simba invokeStream file.csv)
 func invokeStream(ctx *cli.Context) error {
@@ -331,76 +356,14 @@ func invokeFill(ctx *cli.Context) error {
 	return nil
 }
 
-// The cleanBucket subcommand removes all the data inside the specified bucket
-func cleanBucket(ctx *cli.Context) error {
-	var start time.Duration
-	var err error
-	// Validate ctx.Args contains a bucket name
-	if ctx.NArg() == 0 {
-		return cli.Exit("Missing bucket name", 1)
+func invokeClean(ctx *cli.Context) error {
+	//Parse the flags
+	flags, err := ParseCleanFlags(ctx)
+	if err != nil {
+		return cli.Exit(err, 1)
 	}
-
-	if ctx.String("dbtoken") == "" {
-		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
+	if err := Clean(*flags); err != nil {
+		return cli.Exit(err, 1)
 	}
-
-	bucket := ctx.Args().First()
-
-	if ctx.String("startat") == "" {
-		start = time.Now().Local().Sub(time.Unix(0, 0))
-	} else {
-		start, err = ParseDurationString(ctx.String("startat"))
-		if err != nil {
-			return cli.Exit(err, 1)
-		}
-	}
-
-	influxDBApi := NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
-
-	return influxDBApi.DeleteBucket(bucket, start)
-}
-
-// The cleanHost subcommand removes all the data from the desired
-// hosts/systems inside the specified bucket
-func cleanHost(ctx *cli.Context) error {
-	var start time.Duration
-	var err error
-
-	// Validate ctx.Args contains at least a host/system name
-	if ctx.NArg() == 0 {
-		return cli.Exit("Missing host names", 1)
-	}
-
-	if ctx.String("dbtoken") == "" {
-		return cli.Exit("Missing InfluxDB token. See -h for help", 1)
-	}
-
-	// Validate that a bucket has been specified
-	bucket := ctx.String("bucket")
-	if bucket == "" {
-		return cli.Exit("Bucket not specified. See -h for help", 1)
-	}
-
-	if ctx.String("startat") == "" {
-		start = time.Now().Local().Sub(time.Unix(0, 0))
-	} else {
-		start, err = ParseDurationString(ctx.String("startat"))
-		if err != nil {
-			return cli.Exit(err, 1)
-		}
-	}
-
-	influxDBApi := NewInfluxDBApi(ctx.String("dbtoken"), ctx.String("dbip"), ctx.String("dbport"))
-
-	var wg sync.WaitGroup
-	for _, host := range ctx.Args().Slice() {
-		wg.Add(1)
-		go func(hostName string, bucketName string) {
-			defer wg.Done()
-			influxDBApi.DeleteHost(bucket, hostName, start)
-		}(host, bucket)
-	}
-	wg.Wait()
-
 	return nil
 }

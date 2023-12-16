@@ -51,9 +51,9 @@ func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	return nil
 }
 
-// Deletes all the metrics contained in bucket b in the time interval
+// Deletes all the metrics contained in the bucket in the time interval
 // defined by the current time and the range specified by t
-func (api InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
+func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
 	//TODO: allow org selection
 	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
 	if err != nil {
@@ -61,36 +61,36 @@ func (api InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
 		return err
 	}
 
-	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), b)
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), BUCKET)
 	if err != nil {
-		fmt.Printf("Error retrieving bucket '%s': %s\n", b, err)
+		fmt.Printf("Error retrieving bucket '%s': %s\n", BUCKET, err)
 		return err
 	}
 
 	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
 	if err != nil {
-		fmt.Printf("Error deleting contents of bucket '%s': %s\n", b, err)
+		fmt.Printf("Error deleting contents of bucket '%s': %s\n", BUCKET, err)
 		return err
 	}
 
-	fmt.Printf("Data from bucket '%s' deleted succesfully\n", b)
+	fmt.Printf("Data from bucket '%s' deleted succesfully\n", BUCKET)
 
 	return nil
 }
 
-// Deletes all the metrics from host/system h contained in bucket b in
+// Deletes all the metrics from host/system h contained in the bucket in
 // the time interval defined by the current time and the range specified by t
-func (api InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
+func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 	//TODO: allow org selection
-	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), "test")
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
 	if err != nil {
 		fmt.Printf("Error retrieving organization: %s\n", err)
 		return err
 	}
 
-	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), b)
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), BUCKET)
 	if err != nil {
-		fmt.Printf("Error retrieving bucket '%s': %s\n", b, err)
+		fmt.Printf("Error retrieving bucket '%s': %s\n", BUCKET, err)
 		return err
 	}
 
@@ -102,7 +102,7 @@ func (api InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
 		return err
 	}
 
-	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, b)
+	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, BUCKET)
 
 	return nil
 }
