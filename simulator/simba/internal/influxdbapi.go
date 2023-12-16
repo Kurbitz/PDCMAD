@@ -47,8 +47,6 @@ func (i InfluxDBApi) GetLastMetric(host string) (*Metric, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(j))
-
 	metric := Metric{}
 	if err := json.Unmarshal(j, &metric); err != nil {
 		return nil, err
@@ -89,7 +87,9 @@ func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 func (api InfluxDBApi) WriteMetric(m Metric, id string, timeStamp time.Time) error {
 	writeAPI := api.WriteAPI(org, bucket)
 	m.Timestamp = timeStamp.Unix()
+	println(m.Cpu_Io_Wait)
 	p := influxdb2.NewPoint(measurement, map[string]string{"host": id}, m.ToMap(), timeStamp)
 	writeAPI.WritePoint(p)
+	writeAPI.Flush()
 	return nil
 }
