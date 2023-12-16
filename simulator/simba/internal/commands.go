@@ -47,6 +47,8 @@ func Stream(flags StreamArgs) error {
 		}
 
 		insertTime = time.Unix(lastMetric.Timestamp, 0)
+	} else if flags.TimeMultiplier > 1 {
+		log.Fatal("Timemultiplier can only be set while appending\n")
 	}
 
 	metrics, err := ReadFromFile(flags.File, id)
