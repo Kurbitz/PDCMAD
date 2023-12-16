@@ -58,6 +58,8 @@ func Stream(flags StreamArgs) error {
 	metrics.SliceBetween(flags.Startat, flags.Duration)
 
 	// Insert all metrics except the last one
+	timeDelta := (metrics.Metrics[1].Timestamp - metrics.Metrics[0].Timestamp)
+	insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
 	for i, metric := range metrics.Metrics[:len(metrics.Metrics)-1] {
 		if insertTime.After(time.Now()) {
 			log.Println("You have exceeded the current time. The time multiplier might be too high, exiting...")
@@ -75,7 +77,6 @@ func Stream(flags StreamArgs) error {
 	// Handle the last metric
 	influxDBApi.WriteMetric(*(metrics.Metrics[len(metrics.Metrics)-1]), id, insertTime)
 	log.Println("Inserted metrics at", insertTime)
-	println(metrics.Metrics[len(metrics.Metrics)-1].Cpu_Io_Wait)
 
 	return nil
 }
