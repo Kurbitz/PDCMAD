@@ -9,22 +9,25 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
+// FIXME: Move to config file or something
+const (
+	ORG         = "pdc-mad"
+	BUCKET      = "simba"
+	MEASUREMENT = "test"
+)
+
 type InfluxDBApi struct {
-	Token string
-	Url   string
+	influxdb2.Client
 }
 
 func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 	return InfluxDBApi{
-		Token: token,
-		Url:   "http://" + host + ":" + port,
+		influxdb2.NewClient("http://"+host+":"+port, token),
 	}
 }
 
-func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
-	client := influxdb2.NewClient(i.Url, i.Token)
-	defer client.Close()
-	writeAPI := client.WriteAPI("test", "metrics")
+func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
+	writeAPI := api.WriteAPI(ORG, BUCKET)
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
@@ -50,26 +53,21 @@ func (i InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 
 // Deletes all the metrics contained in bucket b in the time interval
 // defined by the current time and the range specified by t
-func (i InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
-	var err error = nil
-
-	client := influxdb2.NewClient(i.Url, i.Token)
-	defer client.Close()
-
+func (api InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
 	//TODO: allow org selection
-	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), "test")
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
 	if err != nil {
 		fmt.Printf("Error retrieving organization: %s\n", err)
 		return err
 	}
 
-	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), b)
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), b)
 	if err != nil {
 		fmt.Printf("Error retrieving bucket '%s': %s\n", b, err)
 		return err
 	}
 
-	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
+	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
 	if err != nil {
 		fmt.Printf("Error deleting contents of bucket '%s': %s\n", b, err)
 		return err
@@ -82,20 +80,15 @@ func (i InfluxDBApi) DeleteBucket(b string, t time.Duration) error {
 
 // Deletes all the metrics from host/system h contained in bucket b in
 // the time interval defined by the current time and the range specified by t
-func (i InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
-	var err error = nil
-
-	client := influxdb2.NewClient(i.Url, i.Token)
-	defer client.Close()
-
+func (api InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
 	//TODO: allow org selection
-	org, err := client.OrganizationsAPI().FindOrganizationByName(context.Background(), "test")
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), "test")
 	if err != nil {
 		fmt.Printf("Error retrieving organization: %s\n", err)
 		return err
 	}
 
-	bucket, err := client.BucketsAPI().FindBucketByName(context.Background(), b)
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), b)
 	if err != nil {
 		fmt.Printf("Error retrieving bucket '%s': %s\n", b, err)
 		return err
@@ -103,7 +96,7 @@ func (i InfluxDBApi) DeleteHost(b string, h string, t time.Duration) error {
 
 	predicate := fmt.Sprintf(`host="%s"`, h)
 
-	err = client.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), predicate)
+	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), predicate)
 	if err != nil {
 		fmt.Printf("Error deleting host '%s': %s\n", h, err)
 		return err
