@@ -315,6 +315,10 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 		}
 	}
 
+	if !ctx.Bool("all") && ctx.NArg() == 0 {
+		return nil, fmt.Errorf("missing hostnames or --all flag. See -h for help")
+	}
+
 	hosts := ctx.Args().Slice()
 
 	return &CleanArgs{
