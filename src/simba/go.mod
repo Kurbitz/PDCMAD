@@ -18,3 +18,11 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/net v0.17.0 // indirect
 )
+
+replace internal/system_metrics => ../internal/system_metrics
+
+replace internal/influxdbapi => ../internal/influxdbapi
+
+require internal/system_metrics v1.0.0
+
+require internal/influxdbapi v1.0.0

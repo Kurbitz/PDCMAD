@@ -1,4 +1,4 @@
-package simba
+package main
 
 import (
 	"fmt"
