@@ -240,6 +240,9 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}
+	if ctx.Int("timemultiplier") < 1 {
+		return nil, fmt.Errorf("timemultiplier cannot be a lower than 1")
+	}
 	file := ctx.Args().Slice()[0]
 	err = ValidateFile(file)
 	if err != nil {
