@@ -22,9 +22,9 @@ jobs:
         go-version: '1.20'
 
     - name: Build
-      working-directory: ./simulator/simba/
+      working-directory: ./src/simba/
       run: go build -v -race .
 
     - name: Build
-      working-directory: ./anomaly_detection/nala
+      working-directory: ./src/nala
       run: go build -v -race .
