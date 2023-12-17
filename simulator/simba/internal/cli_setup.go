@@ -56,7 +56,7 @@ var simulateFlags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:  "duration",
-		Usage: "duration",
+		Usage: "Duration",
 		Value: "",
 	},
 	&cli.StringFlag{
@@ -84,7 +84,7 @@ var App = &cli.App{
 			Subcommands: []*cli.Command{
 				{
 					Name:      "fill",
-					Usage:     "fill the database with data from file(s)",
+					Usage:     "Fill the database with data from file(s)",
 					ArgsUsage: "<file1> <file2> ...",
 					Action:    invokeFill,
 					Flags: append(simulateFlags, &cli.StringFlag{
@@ -100,9 +100,11 @@ var App = &cli.App{
 					Action:    invokeStream,
 					Flags: append(simulateFlags, &cli.IntFlag{
 						Name:  "timemultiplier",
+						Usage: "Increase insertion speed",
 						Value: 1,
 					}, &cli.BoolFlag{
 						Name:  "append",
+						Usage: "Insert from the latest metric",
 						Value: false,
 					}),
 				},
