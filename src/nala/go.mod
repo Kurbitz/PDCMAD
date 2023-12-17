@@ -30,3 +30,11 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace internal/system_metrics => ../internal/system_metrics
+
+replace internal/influxdbapi => ../internal/influxdbapi
+
+require internal/system_metrics v1.0.0
+
+require internal/influxdbapi v1.0.0
