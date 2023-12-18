@@ -1,14 +1,16 @@
-package simba
+package main
 
 import (
+	"internal/influxdbapi"
+	"internal/system_metrics"
 	"log"
 	"sync"
 	"time"
 )
 
-func Fill(flags FillFlags) error {
+func Fill(flags FillArgs) error {
 
-	var influxDBApi = NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
+	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
 	defer influxDBApi.Close()
 
 	var wg sync.WaitGroup
@@ -18,7 +20,7 @@ func Fill(flags FillFlags) error {
 			defer wg.Done()
 
 			id := GetIdFromFileName(filePath)
-			metric, _ := ReadFromFile(filePath, id)
+			metric, _ := system_metrics.ReadFromFile(filePath, id)
 
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
@@ -33,7 +35,7 @@ func Fill(flags FillFlags) error {
 }
 
 func Stream(flags StreamArgs) error {
-	var influxDBApi = NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
+	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
 	id := GetIdFromFileName(flags.File)
 
 	insertTime := time.Now()
@@ -52,7 +54,7 @@ func Stream(flags StreamArgs) error {
 		log.Fatal("Timemultiplier can only be set while appending")
 	}
 
-	metrics, err := ReadFromFile(flags.File, id)
+	metrics, err := system_metrics.ReadFromFile(flags.File, id)
 	if err != nil {
 		return err
 	}
@@ -81,6 +83,26 @@ func Stream(flags StreamArgs) error {
 	// Handle the last metric
 	influxDBApi.WriteMetric(*metrics.Metrics[len(metrics.Metrics)-1], id, insertTime)
 	log.Println("Inserted metrics at", insertTime)
+
+	return nil
+}
+func Clean(flags CleanArgs) error {
+	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
+	defer influxDBApi.Close()
+
+	if flags.All { // Clean the bucket
+		return influxDBApi.DeleteBucket(flags.Startat)
+	}
+
+	var wg sync.WaitGroup
+	for _, host := range flags.Hosts {
+		wg.Add(1)
+		go func(hostName string) {
+			defer wg.Done()
+			influxDBApi.DeleteHost(hostName, flags.Startat)
+		}(host)
+	}
+	wg.Wait()
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package simba
+package system_metrics
 
 import (
 	"log"
