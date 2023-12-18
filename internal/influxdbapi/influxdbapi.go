@@ -58,7 +58,6 @@ func (api InfluxDBApi) GetMetrics(host, duration string) system_metrics.SystemMe
 	queryAPI := api.QueryAPI(ORG)
 	fmt.Println(host, duration)
 	query := fmt.Sprintf(`from(bucket: "%v") |> range(start: -%v) |> filter(fn: (r) => r._measurement == "%v") |> filter(fn: (r) => r["host"] == "%v") |> pivot(rowKey: ["_time"],columnKey: ["_field"], valueColumn: "_value")`, BUCKET, duration, MEASUREMENT, host)
-	fmt.Println(query)
 	result, err := queryAPI.Query(context.Background(), query)
 	var metrics []map[string]interface{}
 	if err == nil {
@@ -68,7 +67,6 @@ func (api InfluxDBApi) GetMetrics(host, duration string) system_metrics.SystemMe
 			delete(currentValue, "_start")
 			delete(currentValue, "_stop")
 			delete(currentValue, "_time")
-			fmt.Printf("currentValue: %v\n", currentValue)
 			metrics = append(metrics, currentValue)
 		}
 
