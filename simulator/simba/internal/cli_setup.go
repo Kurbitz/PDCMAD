@@ -19,6 +19,7 @@ type FillArgs struct {
 	Duration time.Duration
 	StartAt  time.Duration
 	Gap      time.Duration
+	Anomaly  string
 	Files    []string
 }
 
@@ -73,6 +74,11 @@ var simulateFlags = []cli.Flag{
 		Name:  "startat",
 		Usage: "Starting line in file",
 		Value: "",
+	},
+	&cli.StringFlag{
+		Name:  "anomaly",
+		Usage: "Select which type of anomaly to use",
+		Value: "a0",
 	},
 }
 
@@ -262,6 +268,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 		StartAt:  startAt,
 		Gap:      gap,
 		Files:    files,
+		Anomaly:  ctx.String("anomaly"),
 	}, nil
 }
 
