@@ -28,8 +28,8 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 }
 
 // FIXME: There is probably a better way to do this, we need to test this thoroughly
-func (i InfluxDBApi) GetLastMetric(host string) (*Metric, error) {
-	q := i.QueryAPI(org)
+func (api InfluxDBApi) GetLastMetric(host string) (*Metric, error) {
+	q := api.QueryAPI(org)
 	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", bucket, measurement, host)
 	result, err := q.Query(context.Background(), query)
 
