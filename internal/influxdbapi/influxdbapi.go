@@ -1,8 +1,9 @@
-package simba
+package influxdbapi
 
 import (
 	"context"
 	"fmt"
+	"internal/system_metrics"
 	"log"
 	"math"
 	"time"
@@ -18,8 +19,8 @@ const (
 )
 
 // TODO: move it to a better place
-var anomalyMap = map[string]func(m *Metric) *Metric{
-	"no": anomaly0,
+var anomalyMap = map[string]func(m *system_metrics.Metric) *system_metrics.Metric{
+	"a0": anomaly0,
 	"a1": anomaly1,
 	"a2": anomaly2,
 }
@@ -34,7 +35,7 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 	}
 }
 
-func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration, anomaly string) error {
+func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration, anomaly string) error {
 	writeAPI := api.WriteAPI(ORG, BUCKET)
 
 	// Find the newest timestamp and go that many seconds back in time
@@ -118,19 +119,19 @@ func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 
 // TODO: should move to own file?
 // Doesn't change
-func anomaly0(m *Metric) *Metric {
+func anomaly0(m *system_metrics.Metric) *system_metrics.Metric {
 	return m
 }
 
 // Basic example anomaly. Sets Cpu_User to 1
-func anomaly1(m *Metric) *Metric {
+func anomaly1(m *system_metrics.Metric) *system_metrics.Metric {
 	m.Cpu_User = 1
 
 	return m
 }
 
 // Changes Cpu_User to a timestamp based sine
-func anomaly2(m *Metric) *Metric {
+func anomaly2(m *system_metrics.Metric) *system_metrics.Metric {
 	m.Cpu_User = math.Abs(math.Sin(float64(m.Timestamp)))
 
 	return m
