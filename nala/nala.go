@@ -1,19 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 
 	"internal/influxdbapi"
 
 	"github.com/gin-gonic/gin"
 )
-
-// ! Delete later
-type Message struct {
-	Msg string `json:"msg"`
-}
 
 // TODO Create a trigger endpoint
 func triggerDetection(ctx *gin.Context) {
