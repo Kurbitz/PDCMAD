@@ -1,8 +1,9 @@
-package simba
+package influxdbapi
 
 import (
 	"context"
 	"fmt"
+	"internal/system_metrics"
 	"log"
 	"time"
 
@@ -26,7 +27,7 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 	}
 }
 
-func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
+func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration) error {
 	writeAPI := api.WriteAPI(ORG, BUCKET)
 
 	// Find the newest timestamp and go that many seconds back in time
