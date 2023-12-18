@@ -2,6 +2,7 @@ package influxdbapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"internal/system_metrics"
 	"log"
@@ -50,6 +51,41 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 	writeAPI.Flush()
 	// FIXME: Handle errors
 	return nil
+}
+
+// TODO duration need to be checked before use
+func (api InfluxDBApi) GetMetrics(host, duration string) system_metrics.SystemMetric {
+	queryAPI := api.QueryAPI(ORG)
+	fmt.Println(host, duration)
+	query := fmt.Sprintf(`from(bucket: "%v") |> range(start: -%v) |> filter(fn: (r) => r._measurement == "%v") |> filter(fn: (r) => r["host"] == "%v") |> pivot(rowKey: ["_time"],columnKey: ["_field"], valueColumn: "_value")`, BUCKET, duration, MEASUREMENT, host)
+	fmt.Println(query)
+	result, err := queryAPI.Query(context.Background(), query)
+	var metrics []map[string]interface{}
+	if err == nil {
+		// Use Next() to iterate over query result lines
+		for result.Next() {
+			currentValue := result.Record().Values()
+			delete(currentValue, "_start")
+			delete(currentValue, "_stop")
+			delete(currentValue, "_time")
+			fmt.Printf("currentValue: %v\n", currentValue)
+			metrics = append(metrics, currentValue)
+		}
+
+		if result.Err() != nil {
+			fmt.Printf("Query error: %s\n", result.Err().Error())
+		}
+		parsed, err := json.Marshal(metrics)
+		if err != nil {
+			panic(err)
+		}
+		var parsedMetrics []*system_metrics.Metric
+		json.Unmarshal(parsed, &parsedMetrics)
+		return system_metrics.SystemMetric{Id: host, Metrics: parsedMetrics}
+	} else {
+		panic(err)
+	}
+	// Ensures background processes finishes
 }
 
 // Deletes all the metrics contained in the bucket in the time interval
