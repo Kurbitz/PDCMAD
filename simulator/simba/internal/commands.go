@@ -58,9 +58,12 @@ func Stream(flags StreamArgs) error {
 	}
 	metrics.SliceBetween(flags.Startat, flags.Duration)
 
-	//Calculate the timestamp of the first metric
-	timeDelta := (metrics.Metrics[1].Timestamp - metrics.Metrics[0].Timestamp)
-	insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
+	// If we are appending we need to calculate the time delta between the first two metrics
+	var timeDelta int64 = 0
+	if flags.Append {
+		timeDelta = (metrics.Metrics[1].Timestamp - metrics.Metrics[0].Timestamp)
+		insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
+	}
 	// Insert all metrics except the last one
 	for i, metric := range metrics.Metrics[:len(metrics.Metrics)-1] {
 		if insertTime.After(time.Now()) {
@@ -70,7 +73,7 @@ func Stream(flags StreamArgs) error {
 		influxDBApi.WriteMetric(*metric, id, insertTime)
 		log.Println("Inserted metric at", insertTime)
 
-		timeDelta := (metrics.Metrics[i+1].Timestamp - metric.Timestamp)
+		timeDelta = (metrics.Metrics[i+1].Timestamp - metric.Timestamp)
 		insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
 
 		time.Sleep((time.Second * time.Duration(timeDelta)) / time.Duration(flags.TimeMultiplier))
