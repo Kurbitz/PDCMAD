@@ -1,6 +1,8 @@
 package simba
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -9,9 +11,9 @@ import (
 
 // FIXME: Move to config file or something
 const (
-	org         = "pdc-mad"
-	bucket      = "simba"
-	measurement = "test"
+	ORG         = "pdc-mad"
+	BUCKET      = "simba"
+	MEASUREMENT = "test"
 )
 
 type InfluxDBApi struct {
@@ -25,7 +27,7 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 }
 
 func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
-	writeAPI := api.WriteAPI(org, bucket)
+	writeAPI := api.WriteAPI(ORG, BUCKET)
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
@@ -46,5 +48,61 @@ func (api InfluxDBApi) WriteMetrics(m SystemMetric, gap time.Duration) error {
 	// Write any remaining points
 	writeAPI.Flush()
 	// FIXME: Handle errors
+	return nil
+}
+
+// Deletes all the metrics contained in the bucket in the time interval
+// defined by the current time and the range specified by t
+func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
+	//TODO: allow org selection
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
+	if err != nil {
+		fmt.Printf("Error retrieving organization: %s\n", err)
+		return err
+	}
+
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), BUCKET)
+	if err != nil {
+		fmt.Printf("Error retrieving bucket '%s': %s\n", BUCKET, err)
+		return err
+	}
+
+	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
+	if err != nil {
+		fmt.Printf("Error deleting contents of bucket '%s': %s\n", BUCKET, err)
+		return err
+	}
+
+	fmt.Printf("Data from bucket '%s' deleted succesfully\n", BUCKET)
+
+	return nil
+}
+
+// Deletes all the metrics from host/system h contained in the bucket in
+// the time interval defined by the current time and the range specified by t
+func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
+	//TODO: allow org selection
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
+	if err != nil {
+		fmt.Printf("Error retrieving organization: %s\n", err)
+		return err
+	}
+
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), BUCKET)
+	if err != nil {
+		fmt.Printf("Error retrieving bucket '%s': %s\n", BUCKET, err)
+		return err
+	}
+
+	predicate := fmt.Sprintf(`host="%s"`, h)
+
+	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), predicate)
+	if err != nil {
+		fmt.Printf("Error deleting host '%s': %s\n", h, err)
+		return err
+	}
+
+	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, BUCKET)
+
 	return nil
 }

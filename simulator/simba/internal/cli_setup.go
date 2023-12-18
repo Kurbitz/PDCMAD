@@ -34,6 +34,16 @@ type StreamArgs struct {
 	File           string
 }
 
+// CleanArgs is a struct containing the flags passed to the clean command
+type CleanArgs struct {
+	DBToken string
+	DBIp    string
+	DBPort  string
+	All     bool
+	Startat time.Duration
+	Hosts   []string
+}
+
 // Common flags for the simulate command
 var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
@@ -63,6 +73,38 @@ var simulateFlags = []cli.Flag{
 		Name:  "startat",
 		Usage: "Starting line in file",
 		Value: "",
+	},
+}
+
+// Flags for the clean command
+var cleanFlags = []cli.Flag{
+	&cli.StringFlag{
+		Name:    "dbtoken",
+		EnvVars: []string{"INFLUXDB_TOKEN"},
+		Usage:   "InfluxDB token",
+		Value:   "",
+	},
+	&cli.StringFlag{
+		Name:    "dbip",
+		EnvVars: []string{"INFLUXDB_IP"},
+		Usage:   "InfluxDB IP",
+		Value:   "localhost",
+	},
+	&cli.StringFlag{
+		Name:    "dbport",
+		EnvVars: []string{"INFLUXDB_PORT"},
+		Usage:   "InfluxDB port",
+		Value:   "8086",
+	},
+	&cli.StringFlag{
+		Name:  "startat",
+		Usage: "from where to delete relative to current time",
+		Value: "",
+	},
+	&cli.BoolFlag{
+		Name:  "all",
+		Usage: "delete metrics from all the hosts of the bucket",
+		Value: false,
 	},
 }
 
@@ -109,12 +151,11 @@ var App = &cli.App{
 			},
 		},
 		{
-			Name:  "clean",
-			Usage: "Clean the database",
-			Action: func(ctx *cli.Context) error {
-				fmt.Println("clean")
-				return nil
-			},
+			Name:      "clean",
+			Usage:     "Clean the database",
+			ArgsUsage: "<host1> <host2> ...",
+			Action:    invokeClean,
+			Flags:     cleanFlags,
 		},
 		{
 			Name:  "trigger",
@@ -258,6 +299,38 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	}, nil
 }
 
+func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
+	var startAt time.Duration
+	var err error
+	if ctx.String("dbtoken") == "" {
+		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
+	}
+
+	if ctx.String("startat") == "" {
+		startAt = time.Now().Local().Sub(time.Unix(0, 0))
+	} else {
+		startAt, err = ParseDurationString(ctx.String("startat"))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if !ctx.Bool("all") && ctx.NArg() == 0 {
+		return nil, fmt.Errorf("missing hostnames or --all flag. See -h for help")
+	}
+
+	hosts := ctx.Args().Slice()
+
+	return &CleanArgs{
+		DBToken: ctx.String("dbtoken"),
+		DBIp:    ctx.String("dbip"),
+		DBPort:  ctx.String("dbport"),
+		All:     ctx.Bool("all"),
+		Startat: startAt,
+		Hosts:   hosts,
+	}, nil
+}
+
 // The invokeStream command reads a single file and sends them to InfluxDB in real time
 // The file is passed as an argument to the application (simba invokeStream file.csv)
 func invokeStream(ctx *cli.Context) error {
@@ -282,6 +355,18 @@ func invokeFill(ctx *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 	if err := Fill(*flags); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+func invokeClean(ctx *cli.Context) error {
+	//Parse the flags
+	flags, err := ParseCleanFlags(ctx)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	if err := Clean(*flags); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil
