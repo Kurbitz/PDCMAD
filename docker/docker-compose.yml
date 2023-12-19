@@ -44,6 +44,17 @@ services:
             - influxdb
         user: ":"
 
+    nala:
+        image: nala:latest
+        container_name: nala
+        restart: unless-stopped
+        ports:
+            - ${NALA_PORT}:8080
+        environment:
+            GIN_MODE: release
+        depends_on:
+            - influxdb
+
 networks:
     default:
         name: pdc-mad
