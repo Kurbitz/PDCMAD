@@ -5,7 +5,7 @@ services:
         container_name: influxdb
         restart: unless-stopped
         ports:
-            - 8086:8086
+            - ${INFLUXDB_PORT}:8086
         volumes:
             - ./influxdb:/var/lib/influxdb2
         environment:
@@ -21,7 +21,7 @@ services:
         container_name: grafana
         restart: unless-stopped
         ports:
-            - 3000:3000
+            - ${GRAFANA_PORT}:3000
         volumes:
             - ./grafana/data:/var/lib/grafana
             - ./grafana/provisioning:/etc/grafana/provisioning
