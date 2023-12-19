@@ -20,6 +20,8 @@ type FillArgs struct {
 	StartAt  time.Duration
 	Gap      time.Duration
 	Anomaly  string
+	AStart   time.Duration
+	AEnd     time.Duration
 	Files    []string
 }
 
@@ -79,6 +81,16 @@ var simulateFlags = []cli.Flag{
 		Name:  "anomaly",
 		Usage: "Select which type of anomaly to use",
 		Value: "a0",
+	},
+	&cli.StringFlag{
+		Name:  "astart",
+		Usage: "Define anomaly injection starting point",
+		Value: "",
+	},
+	&cli.StringFlag{
+		Name:  "aend",
+		Usage: "Define anomaly injection ending point",
+		Value: "",
 	},
 }
 
@@ -248,6 +260,14 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if err != nil {
 		return nil, err
 	}
+	aStart, err := ParseDurationString(ctx.String("astart"))
+	if err != nil {
+		return nil, err
+	}
+	aEnd, err := ParseDurationString(ctx.String("aend"))
+	if err != nil {
+		return nil, err
+	}
 
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file(s). See -h for help")
@@ -269,6 +289,8 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 		Gap:      gap,
 		Files:    files,
 		Anomaly:  ctx.String("anomaly"),
+		AStart:   aStart,
+		AEnd:     aEnd,
 	}, nil
 }
 

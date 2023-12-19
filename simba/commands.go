@@ -25,7 +25,7 @@ func Fill(flags FillArgs) error {
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
 			metric.SliceBetween(flags.StartAt, flags.Duration)
-			influxDBApi.WriteMetrics(*metric, flags.Gap, flags.Anomaly)
+			influxDBApi.WriteMetrics(*metric, flags.Gap, flags.Anomaly, flags.AStart, flags.AEnd)
 		}(file)
 
 	}

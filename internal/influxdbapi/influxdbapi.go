@@ -9,6 +9,7 @@ import (
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api/write"
 )
 
 // FIXME: Move to config file or something
@@ -35,7 +36,7 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 	}
 }
 
-func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration, anomaly string) error {
+func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration, anomaly string, aStart time.Duration, aEnd time.Duration) error {
 	writeAPI := api.WriteAPI(ORG, BUCKET)
 
 	// Find the newest timestamp and go that many seconds back in time
@@ -50,8 +51,16 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 	// Send all metrics to InfluxDB asynchronously
 	for _, x := range m.Metrics {
 		current := then.Add(time.Second * time.Duration(x.Timestamp))
-		transformed := anomalyMap[anomaly](x) //Technically the pipeline. If no transformation is to be applied the map should return the same metric
+		var p *write.Point
+		/*transformed := anomalyMap[anomaly](x) //Technically the pipeline. If no transformation is to be applied the map should return the same metric
 		p := influxdb2.NewPoint("test", map[string]string{"host": m.Id}, transformed.ToMap(), current)
+		writeAPI.WritePoint(p)*/
+		if (time.Second*time.Duration(x.Timestamp)) < aStart || (time.Second*time.Duration(x.Timestamp)) > aEnd {
+			p = influxdb2.NewPoint("test", map[string]string{"host": m.Id}, x.ToMap(), current)
+		} else {
+			p = Pipeline(x, anomaly, current, m.Id)
+		}
+
 		writeAPI.WritePoint(p)
 	}
 
@@ -59,6 +68,10 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 	writeAPI.Flush()
 	// FIXME: Handle errors
 	return nil
+}
+
+func Pipeline(m *system_metrics.Metric, anomaly string, current time.Time, id string) *write.Point {
+	return influxdb2.NewPoint("test", map[string]string{"host": id}, anomalyMap[anomaly](m).ToMap(), current)
 }
 
 // Deletes all the metrics contained in the bucket in the time interval
@@ -132,7 +145,7 @@ func anomaly1(m *system_metrics.Metric) *system_metrics.Metric {
 
 // Changes Cpu_User to a timestamp based sine
 func anomaly2(m *system_metrics.Metric) *system_metrics.Metric {
-	m.Cpu_User = math.Abs(math.Sin(float64(m.Timestamp)))
+	m.Cpu_User = math.Abs(math.Sin(float64(m.Timestamp / 10)))
 
 	return m
 }
