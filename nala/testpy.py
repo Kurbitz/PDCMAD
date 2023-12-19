@@ -13,5 +13,5 @@ msg = "Bye Go"
 print(msg)
 
 df = pd.read_csv(sys.argv[2])
-#print(df.to_string())  #It will take a while (not that long)
+#print(df.to_string())  #If you are printing system-1 it will take a while (but not that long)
 
