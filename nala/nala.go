@@ -11,6 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	PATH = "../anomaly_detection/"
+)
+
 // TODO Create a trigger endpoint
 func triggerDetection(ctx *gin.Context) {
 	dbapi := influxdbapi.NewInfluxDBApi("KBntTYJdaWbknRyM-CAw29iYdJmQkiK6C1vlEO3B5yuvgGJlmG4Gasps5rTRGflLq7bRSSWZSA_zdnYhpu-HXQ==", "localhost", "8086")
