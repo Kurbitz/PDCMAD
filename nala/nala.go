@@ -24,7 +24,12 @@ func triggerDetection(ctx *gin.Context) {
 // Runs "testyp.py" and prints the output
 func pyCall() {
 	//Sets Arguments to the command
-	cmd := exec.Command("python", "./testpy.py", "Hello Python")
+	program := "python"
+	scriptLocation := "./testpy.py"
+	msg := "Hello Python"
+	csvLocation := "..//dataset/system-1.csv"
+
+	cmd := exec.Command(program, scriptLocation, msg, csvLocation)
 	//Debug prints Stderr error
 	cmd.Stderr = os.Stderr
 	//executes command, listends to stdout, puts w/e into "out" var unless error

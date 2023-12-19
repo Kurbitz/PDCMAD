@@ -1,4 +1,5 @@
 import sys
+import pandas as pd
 # Just a bunch of prints
 def func():
     msg = "Hello from 'func', Go" 
@@ -11,4 +12,6 @@ func()
 msg = "Bye Go"
 print(msg)
 
+df = pd.read_csv(sys.argv[2])
+#print(df.to_string())  #It will take a while (not that long)
 
