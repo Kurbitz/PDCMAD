@@ -66,7 +66,7 @@ var simulateFlags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:  "duration",
-		Usage: "duration",
+		Usage: "Duration",
 		Value: "",
 	},
 	&cli.StringFlag{
@@ -126,7 +126,7 @@ var App = &cli.App{
 			Subcommands: []*cli.Command{
 				{
 					Name:      "fill",
-					Usage:     "fill the database with data from file(s)",
+					Usage:     "Fill the database with data from file(s)",
 					ArgsUsage: "<file1> <file2> ...",
 					Action:    invokeFill,
 					Flags: append(simulateFlags, &cli.StringFlag{
@@ -142,9 +142,11 @@ var App = &cli.App{
 					Action:    invokeStream,
 					Flags: append(simulateFlags, &cli.IntFlag{
 						Name:  "timemultiplier",
+						Usage: "Increase insertion speed",
 						Value: 1,
 					}, &cli.BoolFlag{
 						Name:  "append",
+						Usage: "Insert from the latest metric",
 						Value: false,
 					}),
 				},
@@ -281,6 +283,9 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}
+	if ctx.Int("timemultiplier") < 1 {
+		return nil, fmt.Errorf("timemultiplier cannot be a lower than 1")
+	}
 	file := ctx.Args().Slice()[0]
 	err = ValidateFile(file)
 	if err != nil {
@@ -297,6 +302,13 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		Append:         ctx.Bool("append"),
 		File:           file,
 	}, nil
+}
+
+// FIXME: Use better ID
+func GetIdFromFileName(file string) string {
+	// Remove the file extension from the base file name
+	return filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
+
 }
 
 func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
