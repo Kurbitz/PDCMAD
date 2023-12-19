@@ -34,6 +34,9 @@ type StreamArgs struct {
 	Startat        time.Duration
 	TimeMultiplier int
 	Append         bool
+	Anomaly        string
+	AStart         time.Duration
+	AEnd           time.Duration
 	File           string
 }
 
@@ -69,7 +72,7 @@ var simulateFlags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:  "duration",
-		Usage: "duration",
+		Usage: "Duration",
 		Value: "",
 	},
 	&cli.StringFlag{
@@ -144,7 +147,7 @@ var App = &cli.App{
 			Subcommands: []*cli.Command{
 				{
 					Name:      "fill",
-					Usage:     "fill the database with data from file(s)",
+					Usage:     "Fill the database with data from file(s)",
 					ArgsUsage: "<file1> <file2> ...",
 					Action:    invokeFill,
 					Flags: append(simulateFlags, &cli.StringFlag{
@@ -160,9 +163,11 @@ var App = &cli.App{
 					Action:    invokeStream,
 					Flags: append(simulateFlags, &cli.IntFlag{
 						Name:  "timemultiplier",
+						Usage: "Increase insertion speed",
 						Value: 1,
 					}, &cli.BoolFlag{
 						Name:  "append",
+						Usage: "Insert from the latest metric",
 						Value: false,
 					}),
 				},
@@ -288,10 +293,10 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 		Duration: duration,
 		StartAt:  startAt,
 		Gap:      gap,
-		Files:    files,
 		Anomaly:  ctx.String("anomaly"),
 		AStart:   aStart,
 		AEnd:     aEnd,
+		Files:    files,
 	}, nil
 }
 
@@ -307,9 +312,21 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if err != nil {
 		return nil, err
 	}
+	//TODO: check compatibility of the flags and give standard behaviour(empty aend should mean until the end)
+	aStart, err := ParseDurationString(ctx.String("astart"))
+	if err != nil {
+		return nil, err
+	}
+	aEnd, err := ParseDurationString(ctx.String("aend"))
+	if err != nil {
+		return nil, err
+	}
 
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
+	}
+	if ctx.Int("timemultiplier") < 1 {
+		return nil, fmt.Errorf("timemultiplier cannot be a lower than 1")
 	}
 	file := ctx.Args().Slice()[0]
 	err = ValidateFile(file)
@@ -325,8 +342,18 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		Startat:        startAt,
 		TimeMultiplier: ctx.Int("timemultiplier"),
 		Append:         ctx.Bool("append"),
+		Anomaly:        ctx.String("anomaly"),
+		AStart:         aStart,
+		AEnd:           aEnd,
 		File:           file,
 	}, nil
+}
+
+// FIXME: Use better ID
+func GetIdFromFileName(file string) string {
+	// Remove the file extension from the base file name
+	return filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
+
 }
 
 func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {

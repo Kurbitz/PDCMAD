@@ -12,24 +12,6 @@ var anomalyMap = map[string]func(m *system_metrics.SystemMetric) *system_metrics
 	"a2": anomaly2,
 }
 
-/*func Pipeline(m *system_metrics.Metric, anomaly string, current time.Time, id string) *write.Point {
-	return influxdb2.NewPoint("test", map[string]string{"host": id}, anomalyMap[anomaly](m).ToMap(), current)
-}*/
-
-/*
-	for _, x := range m.Metrics {
-			current := then.Add(time.Second * time.Duration(x.Timestamp))
-			var p *write.Point
-
-			if (time.Second*time.Duration(x.Timestamp)) < aStart || (time.Second*time.Duration(x.Timestamp)) > aEnd {
-				p = influxdb2.NewPoint("test", map[string]string{"host": m.Id}, x.ToMap(), current)
-			} else {
-				p = Pipeline(x, anomaly, current, m.Id)
-			}
-
-			writeAPI.WritePoint(p)
-		}
-*/
 func Pipeline(metrics *system_metrics.SystemMetric, anomalyFlag string, aStart time.Duration, aEnd time.Duration) {
 	var startIndex int
 	var metricsAux system_metrics.SystemMetric
