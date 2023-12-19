@@ -80,7 +80,7 @@ var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:  "anomaly",
 		Usage: "Select which type of anomaly to use",
-		Value: "a0",
+		Value: "",
 	},
 	&cli.StringFlag{
 		Name:  "astart",
@@ -260,6 +260,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if err != nil {
 		return nil, err
 	}
+	//TODO: check compatibility of the flags and give standard behaviour(empty aend should mean until the end)
 	aStart, err := ParseDurationString(ctx.String("astart"))
 	if err != nil {
 		return nil, err

@@ -103,6 +103,17 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 
 	sm.Metrics = sm.Metrics[startIndex : startIndex+endIndex]
 }
+func (sm SystemMetric) Swap(data *SystemMetric, startIndex int) {
+	println("Start index + len: ", startIndex+(len(data.Metrics)))
+	println("Entire len: ", len(sm.Metrics))
+	if startIndex+len(data.Metrics) > len(sm.Metrics) {
+		log.Fatal("Swap exceeds SystemMetrics size limit")
+	}
+	copy(sm.Metrics[startIndex:startIndex+len(data.Metrics)], data.Metrics)
+	/*for i, m := range data.Metrics {
+		sm.Metrics[startIndex+i] = m
+	}*/
+}
 
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 	file, err := os.Open(filePath)
