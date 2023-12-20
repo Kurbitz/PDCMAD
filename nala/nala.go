@@ -56,7 +56,7 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 		log.Println(err)
 	} else {
 		fmt.Println(string(out))
-		inputFile, err := os.OpenFile("py_output.csv", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+		inputFile, err := os.OpenFile("logs/py_output.csv", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 		if err != nil {
 			log.Println(err)
 		}
