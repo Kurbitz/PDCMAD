@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"internal/influxdbapi"
+	"internal/system_metrics"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 
-	"internal/influxdbapi"
+	"github.com/gocarina/gocsv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +24,14 @@ func triggerDetection(ctx *gin.Context) {
 	defer dbapi.Close()
 	host := ctx.Param("host")
 	duration := ctx.Param("duration")
+	if message, err := dbapi.GetMetrics(host, duration); err == nil {
+		go func() {
+			triggerIsolationForest("testpy.py", message)
+		}()
+	} else {
+		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
+		return
+	}
 	ctx.String(http.StatusOK, "Anomaly detection triggered!")
 }
 
@@ -55,10 +66,10 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 		//TODO wrap anomaly output
 
 	}
+
 }
 
 func main() {
-	pyCall()
 	router := gin.Default()
 	router.GET("/nala/IF/:host/:duration", triggerDetection)
 	router.Run("localhost:8088")
