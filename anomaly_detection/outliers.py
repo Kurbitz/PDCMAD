@@ -11,9 +11,9 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 
-def preprocess_data(csv_input_path):
+def preprocess_data(file_path):
     # Read CSV file
-    df = pd.read_csv(csv_input_path)
+    df = pd.read_csv(file_path)
 
     # lets assume data starts coming from this time
     start_time = datetime(2023, 10, 29, 0, 0, 0)
@@ -57,8 +57,7 @@ def apply_IF(df_pca, df, no_of_tree=1000, perchentage_of_outlier=0.01):
     return df_anomaly
 
 
-def main(csv_input_path, csv_output_path):
-    prep_df = preprocess_data(csv_input_path=csv_input_path)
+    prep_df = preprocess_data(file_path=csv_input_path)
 
     df_pca, pca_model = apply_PCA(
         prep_df.drop("timestamp", axis=1)
