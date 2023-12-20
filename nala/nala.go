@@ -65,7 +65,9 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 			log.Println(err)
 		}
 		defer inputFile.Close()
-		gocsv.UnmarshalFile(inputFile, &anomalyData.Metrics)
+		if err = gocsv.UnmarshalFile(inputFile, &anomalyData.Metrics); err != nil {
+			log.Printf("Error when parsing anomaly detection csv: '%v'", err)
+		}
 		log.Println(anomalyData.Metrics[0].Cpu_System)
 		//TODO wrap anomaly output
 
