@@ -60,6 +60,6 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 func main() {
 	pyCall()
 	router := gin.Default()
-	router.GET("/nala/trigger/:host/:duration", triggerDetection)
+	router.GET("/nala/IF/:host/:duration", triggerDetection)
 	router.Run("localhost:8088")
 }
