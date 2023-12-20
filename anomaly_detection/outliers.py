@@ -3,7 +3,7 @@ import pandas as pd
 
 # import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
-from datetime import datetime
+# from datetime import datetime
 
 # import plotly.express as px
 import numpy as np
@@ -11,15 +11,15 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 
-def preprocess_data(file_path):
+def read_file(file_path):
     # Read CSV file
     df = pd.read_csv(file_path)
 
-    # lets assume data starts coming from this time
-    start_time = datetime(2023, 10, 29, 0, 0, 0)
-    time_range = pd.date_range(start=start_time, periods=len(df), freq="30S")
-    # adding time to data after every 30 from that date
-    df["timestamp"] = time_range
+    # # lets assume data starts coming from this time
+    # start_time = datetime(2023, 10, 29, 0, 0, 0)
+    # time_range = pd.date_range(start=start_time, periods=len(df), freq="30S")
+    # # adding time to data after every 30 from that date
+    # df["timestamp"] = time_range
 
     return df
 
@@ -40,10 +40,9 @@ def apply_IF(df_pca, df, no_of_tree=1000, perchentage_of_outlier=0.01):
     iso_forest = IsolationForest(
         n_estimators=no_of_tree, contamination=perchentage_of_outlier
     )
-    iso_forest.fit(df_pca)
 
     # Prediction
-    anomalies = iso_forest.predict(df_pca)
+    anomalies = iso_forest.fit_predict(df_pca)
     anomaly_indices = np.where(anomalies == -1)[0]
 
     # output dataframe with anomaly indices(log file)
@@ -63,7 +62,7 @@ def main(args):
         csv_output_path = args[2]
     except IndexError:
         raise SystemExit(f"Usage: {args[0]}, inputfile, outputfile")
-    prep_df = preprocess_data(file_path=csv_input_path)
+    prep_df = read_file(file_path=csv_input_path)
 
     df_pca, _ = apply_PCA(
         prep_df.drop("timestamp", axis=1)
