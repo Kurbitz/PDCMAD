@@ -26,7 +26,8 @@ func triggerDetection(ctx *gin.Context) {
 	duration := ctx.Param("duration")
 	if message, err := dbapi.GetMetrics(host, duration); err == nil {
 		go func() {
-			triggerIsolationForest("testpy.py", message)
+			triggerIsolationForest("outliers.py", message)
+			log.Println("Anomaly detection is done!")
 		}()
 	} else {
 		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
@@ -35,10 +36,10 @@ func triggerDetection(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Anomaly detection triggered!")
 }
 
-// Runs "testyp.py" and prints the output
+// Runs "outliers.py" and wraps the output
 func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 	//Sets Arguments to the command
-	outputFile, err := os.Create("./logs/go_output.csv")
+	outputFile, err := os.Create("logs/go_output.csv")
 	if err != nil {
 		log.Println(err)
 	}
@@ -48,21 +49,24 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 		log.Println(err)
 	}
 	fullPath := PATH + filename
-	cmd := exec.Command(PATH+"/bin/python", fullPath)
+	inputFilePath := "../nala/logs/go_output.csv"
+	outputFilePath := "../nala/logs/py_output.csv"
+	cmd := exec.Command(PATH+"/bin/python", fullPath, inputFilePath, outputFilePath)
 	cmd.Stderr = os.Stderr
 	anomalyData := system_metrics.SystemMetric{Id: data.Id}
 	//executes command, listends to stdout, puts w/e into "out" var unless error
 	if out, err := cmd.Output(); err != nil {
 		log.Println(err)
+		log.Println(string(out))
 	} else {
 		fmt.Println(string(out))
-		inputFile, err := os.OpenFile("logs/py_output.csv", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+		inputFile, err := os.OpenFile("logs/py_output.csv", os.O_RDONLY, os.ModePerm)
 		if err != nil {
 			log.Println(err)
 		}
 		defer inputFile.Close()
 		gocsv.UnmarshalFile(inputFile, &anomalyData.Metrics)
-
+		log.Println(anomalyData.Metrics[0].Cpu_System)
 		//TODO wrap anomaly output
 
 	}
