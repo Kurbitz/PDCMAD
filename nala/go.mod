@@ -17,7 +17,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.14.1 // indirect
-	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a // indirect
+	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a // direct
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0 // indirect
@@ -39,7 +39,7 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	internal/system_metrics v0.0.0-00010101000000-000000000000 // indirect
+	internal/system_metrics v0.0.0-00010101000000-000000000000 // direct
 )
 
 replace internal/system_metrics => ../internal/system_metrics
