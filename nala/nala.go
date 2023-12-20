@@ -27,14 +27,34 @@ func triggerDetection(ctx *gin.Context) {
 // Runs "testyp.py" and prints the output
 func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 	//Sets Arguments to the command
-	cmd := exec.Command(PATH+"/bin/python", fullPath)
-	//executes command, listends to stdout, puts w/e into "out" var unless error
-	out, err := cmd.Output()
+	outputFile, err := os.Create("./logs/go_output.csv")
 	if err != nil {
-		log.Fatal(err) // Only gives exit 1 if error, use "cmd.Stderr = os.Stderr" (import os)
+		log.Println(err)
 	}
-	//Print, Need explicit typing or it prints an array with unicode numbers
-	fmt.Println(string(out))
+	defer outputFile.Close()
+	gocsv.MarshalFile(&data.Metrics, outputFile)
+	if err != nil {
+		log.Println(err)
+	}
+	fullPath := PATH + filename
+	cmd := exec.Command(PATH+"/bin/python", fullPath)
+	cmd.Stderr = os.Stderr
+	anomalyData := system_metrics.SystemMetric{Id: data.Id}
+	//executes command, listends to stdout, puts w/e into "out" var unless error
+	if out, err := cmd.Output(); err != nil {
+		log.Println(err)
+	} else {
+		fmt.Println(string(out))
+		inputFile, err := os.OpenFile("py_output.csv", os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+		if err != nil {
+			log.Println(err)
+		}
+		defer inputFile.Close()
+		gocsv.UnmarshalFile(inputFile, &anomalyData.Metrics)
+
+		//TODO wrap anomaly output
+
+	}
 }
 
 func main() {
