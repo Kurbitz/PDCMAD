@@ -13,8 +13,8 @@ import (
 
 // FIXME: Move to config file or something
 const (
-	ORG         = "pdc-mad"
-	BUCKET      = "simba"
+	ORG         = "PDC-MAD"
+	BUCKET      = "metrics"
 	MEASUREMENT = "test"
 )
 

@@ -25,7 +25,11 @@ func Fill(flags FillArgs) error {
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
 			metric.SliceBetween(flags.StartAt, flags.Duration)
-			Pipeline(metric, flags.Anomaly, flags.AStart, flags.AEnd)
+
+			if err := injectAnomaly(metric, flags.Anomaly); err != nil {
+				panic(err)
+			}
+
 			influxDBApi.WriteMetrics(metric, flags.Gap)
 		}(file)
 
@@ -60,7 +64,9 @@ func Stream(flags StreamArgs) error {
 		return err
 	}
 	metrics.SliceBetween(flags.Startat, flags.Duration)
-	Pipeline(metrics, flags.Anomaly, flags.AStart, flags.AEnd)
+	if err := injectAnomaly(metrics, flags.Anomaly); err != nil {
+		panic(err)
+	}
 
 	// If we are appending we need to calculate the time delta between the first two metrics
 	var timeDelta int64 = 0

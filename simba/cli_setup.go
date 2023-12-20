@@ -85,16 +85,6 @@ var simulateFlags = []cli.Flag{
 		Usage: "Select which type of anomaly to use",
 		Value: "",
 	},
-	&cli.StringFlag{
-		Name:  "astart",
-		Usage: "Define anomaly injection starting point",
-		Value: "",
-	},
-	&cli.StringFlag{
-		Name:  "aend",
-		Usage: "Define anomaly injection ending point",
-		Value: "",
-	},
 }
 
 // Flags for the clean command
@@ -229,6 +219,18 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
+func checkAnomalyString(anomalyString string) (string, error) {
+	if anomalyString == "" {
+		return anomalyString, nil
+	}
+	for key := range AnomalyMap {
+		if anomalyString == key {
+			return anomalyString, nil
+		}
+	}
+	return anomalyString, fmt.Errorf("error injection %s is not implemented", anomalyString)
+}
+
 func ValidateFile(file string) error {
 	// Validate the file exists
 	if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -265,12 +267,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO: check compatibility of the flags and give standard behaviour(empty aend should mean until the end)
-	aStart, err := ParseDurationString(ctx.String("astart"))
-	if err != nil {
-		return nil, err
-	}
-	aEnd, err := ParseDurationString(ctx.String("aend"))
+	anomalyString, err := checkAnomalyString(ctx.String("anomaly"))
 	if err != nil {
 		return nil, err
 	}
@@ -293,9 +290,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 		Duration: duration,
 		StartAt:  startAt,
 		Gap:      gap,
-		Anomaly:  ctx.String("anomaly"),
-		AStart:   aStart,
-		AEnd:     aEnd,
+		Anomaly:  anomalyString,
 		Files:    files,
 	}, nil
 }
@@ -313,15 +308,6 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		return nil, err
 	}
 	//TODO: check compatibility of the flags and give standard behaviour(empty aend should mean until the end)
-	aStart, err := ParseDurationString(ctx.String("astart"))
-	if err != nil {
-		return nil, err
-	}
-	aEnd, err := ParseDurationString(ctx.String("aend"))
-	if err != nil {
-		return nil, err
-	}
-
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}
@@ -343,8 +329,6 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		TimeMultiplier: ctx.Int("timemultiplier"),
 		Append:         ctx.Bool("append"),
 		Anomaly:        ctx.String("anomaly"),
-		AStart:         aStart,
-		AEnd:           aEnd,
 		File:           file,
 	}, nil
 }
