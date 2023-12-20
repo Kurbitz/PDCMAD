@@ -21,8 +21,7 @@ func triggerDetection(ctx *gin.Context) {
 	defer dbapi.Close()
 	host := ctx.Param("host")
 	duration := ctx.Param("duration")
-	message := dbapi.GetMetrics(host, duration)
-	ctx.IndentedJSON(http.StatusOK, message)
+	ctx.String(http.StatusOK, "Anomaly detection triggered!")
 }
 
 // Runs "testyp.py" and prints the output
