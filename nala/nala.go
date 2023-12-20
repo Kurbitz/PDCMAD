@@ -26,7 +26,7 @@ func triggerDetection(ctx *gin.Context) {
 }
 
 // Runs "testyp.py" and prints the output
-func pyCall() {
+func triggerIsolationForest(filename string, data system_metrics.SystemMetric) {
 	//Sets Arguments to the command
 	cmd := exec.Command("python", "./testpy.py", "Hello Python")
 	//executes command, listends to stdout, puts w/e into "out" var unless error
