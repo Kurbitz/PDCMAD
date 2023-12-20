@@ -65,7 +65,7 @@ def main(args):
         raise SystemExit(f"Usage: {args[0]}, inputfile, outputfile")
     prep_df = preprocess_data(file_path=csv_input_path)
 
-    df_pca, pca_model = apply_PCA(
+    df_pca, _ = apply_PCA(
         prep_df.drop("timestamp", axis=1)
     )  # didn't take timestamp as feature
 
