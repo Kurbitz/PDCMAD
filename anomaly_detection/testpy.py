@@ -1,14 +1,13 @@
-import sys
+import pandas as pd
+
+INPUTFILE = "../nala/logs/go_output.csv"
+OUTPUTFILE = "../nala/logs/py_output.csv"
+
+
 # Just a bunch of prints
-def func():
-    msg = "Hello from 'func', Go" 
-    print(msg)
-    
-print(sys.argv[1]) # Prints argument on index 1 ie argument 2
-msg = "Hello Go"
-print(msg)
-func()
-msg = "Bye Go"
-print(msg)
+def main():
+    dataframe = pd.read_csv(INPUTFILE)
+    dataframe.to_csv(OUTPUTFILE)
 
 
+main()
