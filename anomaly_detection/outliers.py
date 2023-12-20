@@ -57,6 +57,12 @@ def apply_IF(df_pca, df, no_of_tree=1000, perchentage_of_outlier=0.01):
     return df_anomaly
 
 
+def main(args):
+    try:
+        csv_input_path = args[1]
+        csv_output_path = args[2]
+    except IndexError:
+        raise SystemExit(f"Usage: {args[0]}, inputfile, outputfile")
     prep_df = preprocess_data(file_path=csv_input_path)
 
     df_pca, pca_model = apply_PCA(
@@ -72,6 +78,4 @@ def apply_IF(df_pca, df, no_of_tree=1000, perchentage_of_outlier=0.01):
 
 
 if __name__ == "__main__":
-    input_csv = sys.argv[1]
-    output_csv = sys.argv[2]
-    main(input_csv, output_csv)
+    main(sys.argv)
