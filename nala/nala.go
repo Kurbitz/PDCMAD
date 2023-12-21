@@ -22,8 +22,9 @@ func triggerDetection(ctx *gin.Context) {
 
 // Runs "testyp.py" and prints the output
 func pyCall() {
+	// FIX ME : we still need to create the inout data.csv file and read the output file
 	//Sets Arguments to the command
-	cmd := exec.Command("python", "./testpy.py", "Hello Python")
+	cmd := exec.Command("python", "../anomaly_detection/outliers.py", "data.csv", "output.csv")
 	//executes command, listends to stdout, puts w/e into "out" var unless error
 	out, err := cmd.Output()
 	if err != nil {
@@ -34,7 +35,7 @@ func pyCall() {
 }
 
 func main() {
-	pyCall()
+	//pyCall()   :since the csv file doesn't exist yet
 	router := gin.Default()
 	router.GET("/nala/trigger", triggerDetection)
 	router.Run("localhost:8088")
