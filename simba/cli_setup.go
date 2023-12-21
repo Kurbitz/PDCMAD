@@ -314,6 +314,10 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if ctx.Int("timemultiplier") < 1 {
 		return nil, fmt.Errorf("timemultiplier cannot be a lower than 1")
 	}
+	anomalyString, err := checkAnomalyString(ctx.String("anomaly"))
+	if err != nil {
+		return nil, err
+	}
 	file := ctx.Args().Slice()[0]
 	err = ValidateFile(file)
 	if err != nil {
@@ -328,7 +332,7 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		Startat:        startAt,
 		TimeMultiplier: ctx.Int("timemultiplier"),
 		Append:         ctx.Bool("append"),
-		Anomaly:        ctx.String("anomaly"),
+		Anomaly:        anomalyString,
 		File:           file,
 	}, nil
 }
