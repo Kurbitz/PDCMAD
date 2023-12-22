@@ -97,8 +97,9 @@ func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
 		fmt.Printf("Error retrieving bucket '%s': %s\n", api.Bucket, err)
 		return err
 	}
+	predicate := fmt.Sprintf(`_measurement="%s"`, api.Measurement)
 
-	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
+	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), predicate)
 	if err != nil {
 		fmt.Printf("Error deleting contents of bucket '%s': %s\n", api.Bucket, err)
 		return err
@@ -125,7 +126,7 @@ func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 		return err
 	}
 
-	predicate := fmt.Sprintf(`host="%s"`, h)
+	predicate := fmt.Sprintf(`host="%s" and _measurement="%s"`, h, api.Measurement)
 
 	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), predicate)
 	if err != nil {
