@@ -13,13 +13,16 @@ import (
 
 // FillArgs is a struct containing the flags passed to the fill command
 type FillArgs struct {
-	DBToken  string
-	DBIp     string
-	DBPort   string
-	Duration time.Duration
-	StartAt  time.Duration
-	Gap      time.Duration
-	Files    []string
+	DBToken       string
+	DBIp          string
+	DBPort        string
+	DBOrg         string
+	DBBucket      string
+	DBMeasurement string
+	Duration      time.Duration
+	StartAt       time.Duration
+	Gap           time.Duration
+	Files         []string
 }
 
 // StreamArgs is a struct containing the flags passed to the stream command
@@ -27,6 +30,9 @@ type StreamArgs struct {
 	DBToken        string
 	DBIp           string
 	DBPort         string
+	DBOrg          string
+	DBBucket       string
+	DBMeasurement  string
 	Duration       time.Duration
 	Startat        time.Duration
 	TimeMultiplier int
@@ -36,12 +42,15 @@ type StreamArgs struct {
 
 // CleanArgs is a struct containing the flags passed to the clean command
 type CleanArgs struct {
-	DBToken string
-	DBIp    string
-	DBPort  string
-	All     bool
-	Startat time.Duration
-	Hosts   []string
+	DBToken       string
+	DBIp          string
+	DBPort        string
+	DBOrg         string
+	DBBucket      string
+	DBMeasurement string
+	All           bool
+	Startat       time.Duration
+	Hosts         []string
 }
 
 // Common flags for the simulate command
@@ -63,6 +72,18 @@ var simulateFlags = []cli.Flag{
 		EnvVars: []string{"INFLUXDB_PORT"},
 		Usage:   "InfluxDB port",
 		Value:   "8086",
+	},
+	&cli.StringFlag{
+		Name:    "dborg",
+		Usage:   "InfluxDB organization",
+		EnvVars: []string{"INFLUXDB_ORG"},
+		Value:   "pdc-mad",
+	},
+	&cli.StringFlag{
+		Name:    "dbbucket",
+		Usage:   "InfluxDB bucket",
+		EnvVars: []string{"INFLUXDB_BUCKET"},
+		Value:   "pdc-mad",
 	},
 	&cli.StringFlag{
 		Name:  "duration",
@@ -257,13 +278,16 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	}
 
 	return &FillArgs{
-		DBToken:  ctx.String("dbtoken"),
-		DBIp:     ctx.String("dbip"),
-		DBPort:   ctx.String("dbport"),
-		Duration: duration,
-		StartAt:  startAt,
-		Gap:      gap,
-		Files:    files,
+		DBToken:       ctx.String("dbtoken"),
+		DBIp:          ctx.String("dbip"),
+		DBPort:        ctx.String("dbport"),
+		DBOrg:         ctx.String("dborg"),
+		DBBucket:      ctx.String("dbbucket"),
+		DBMeasurement: "metrics",
+		Duration:      duration,
+		StartAt:       startAt,
+		Gap:           gap,
+		Files:         files,
 	}, nil
 }
 
@@ -296,6 +320,9 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		DBToken:        ctx.String("dbtoken"),
 		DBIp:           ctx.String("dbip"),
 		DBPort:         ctx.String("dbport"),
+		DBOrg:          ctx.String("dborg"),
+		DBBucket:       ctx.String("dbbucket"),
+		DBMeasurement:  "metrics",
 		Duration:       duration,
 		Startat:        startAt,
 		TimeMultiplier: ctx.Int("timemultiplier"),
@@ -334,12 +361,15 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	hosts := ctx.Args().Slice()
 
 	return &CleanArgs{
-		DBToken: ctx.String("dbtoken"),
-		DBIp:    ctx.String("dbip"),
-		DBPort:  ctx.String("dbport"),
-		All:     ctx.Bool("all"),
-		Startat: startAt,
-		Hosts:   hosts,
+		DBToken:       ctx.String("dbtoken"),
+		DBIp:          ctx.String("dbip"),
+		DBPort:        ctx.String("dbport"),
+		DBOrg:         ctx.String("dborg"),
+		DBBucket:      ctx.String("dbbucket"),
+		DBMeasurement: "metrics",
+		All:           ctx.Bool("all"),
+		Startat:       startAt,
+		Hosts:         hosts,
 	}, nil
 }
 

@@ -11,27 +11,26 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-// FIXME: Move to config file or something
-const (
-	ORG         = "pdc-mad"
-	BUCKET      = "pdc-mad"
-	MEASUREMENT = "metrics"
-)
-
 type InfluxDBApi struct {
 	influxdb2.Client
+	Org         string
+	Bucket      string
+	Measurement string
 }
 
-func NewInfluxDBApi(token, host, port string) InfluxDBApi {
+func NewInfluxDBApi(token, host, port, org, bucket, measurement string) InfluxDBApi {
 	return InfluxDBApi{
 		influxdb2.NewClient("http://"+host+":"+port, token),
+		org,
+		bucket,
+		measurement,
 	}
 }
 
 // FIXME: There is probably a better way to do this, we need to test this thoroughly
 func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error) {
-	q := api.QueryAPI(ORG)
-	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", BUCKET, MEASUREMENT, host)
+	q := api.QueryAPI(api.Org)
+	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", api.Bucket, api.Measurement, host)
 	result, err := q.Query(context.Background(), query)
 
 	results := make(map[string]interface{}, 0)
@@ -57,7 +56,7 @@ func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error
 }
 
 func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration) error {
-	writeAPI := api.WriteAPI(ORG, BUCKET)
+	writeAPI := api.WriteAPI(api.Org, api.Bucket)
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
@@ -73,7 +72,7 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 		current := then.Add(time.Second * time.Duration(x.Timestamp))
 		// Set the timestamp to the current Unix timestamp
 		x.Timestamp = current.Unix()
-		p := influxdb2.NewPoint(MEASUREMENT, map[string]string{"host": m.Id}, x.ToMap(), current)
+		p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": m.Id}, x.ToMap(), current)
 		writeAPI.WritePoint(p)
 	}
 
@@ -87,25 +86,25 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 // defined by the current time and the range specified by t
 func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
 	//TODO: allow org selection
-	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), api.Org)
 	if err != nil {
 		fmt.Printf("Error retrieving organization: %s\n", err)
 		return err
 	}
 
-	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), BUCKET)
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), api.Bucket)
 	if err != nil {
-		fmt.Printf("Error retrieving bucket '%s': %s\n", BUCKET, err)
+		fmt.Printf("Error retrieving bucket '%s': %s\n", api.Bucket, err)
 		return err
 	}
 
 	err = api.DeleteAPI().Delete(context.Background(), org, bucket, time.Now().Local().Add(-t), time.Now().Local(), "")
 	if err != nil {
-		fmt.Printf("Error deleting contents of bucket '%s': %s\n", BUCKET, err)
+		fmt.Printf("Error deleting contents of bucket '%s': %s\n", api.Bucket, err)
 		return err
 	}
 
-	fmt.Printf("Data from bucket '%s' deleted succesfully\n", BUCKET)
+	fmt.Printf("Data from bucket '%s' deleted succesfully\n", api.Bucket)
 
 	return nil
 }
@@ -114,15 +113,15 @@ func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
 // the time interval defined by the current time and the range specified by t
 func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 	//TODO: allow org selection
-	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), ORG)
+	org, err := api.OrganizationsAPI().FindOrganizationByName(context.Background(), api.Org)
 	if err != nil {
 		fmt.Printf("Error retrieving organization: %s\n", err)
 		return err
 	}
 
-	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), BUCKET)
+	bucket, err := api.BucketsAPI().FindBucketByName(context.Background(), api.Bucket)
 	if err != nil {
-		fmt.Printf("Error retrieving bucket '%s': %s\n", BUCKET, err)
+		fmt.Printf("Error retrieving bucket '%s': %s\n", api.Bucket, err)
 		return err
 	}
 
@@ -134,15 +133,15 @@ func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 		return err
 	}
 
-	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, BUCKET)
+	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, api.Bucket)
 
 	return nil
 }
 
 func (api InfluxDBApi) WriteMetric(m system_metrics.Metric, id string, timeStamp time.Time) error {
-	writeAPI := api.WriteAPI(ORG, BUCKET)
+	writeAPI := api.WriteAPI(api.Org, api.Bucket)
 	m.Timestamp = timeStamp.Unix()
-	p := influxdb2.NewPoint(MEASUREMENT, map[string]string{"host": id}, m.ToMap(), timeStamp)
+	p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": id}, m.ToMap(), timeStamp)
 	writeAPI.WritePoint(p)
 
 	//Write the remaining point
