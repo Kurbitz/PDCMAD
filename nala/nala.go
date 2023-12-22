@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +25,10 @@ func triggerDetection(ctx *gin.Context) {
 func pyCall() {
 	// FIX ME : we still need to create the inout data.csv file and read the output file
 	//Sets Arguments to the command
+	//Debug prints Stderr error
+	
 	cmd := exec.Command("python", "../anomaly_detection/outliers.py", "data.csv", "output.csv")
+	cmd.Stderr = os.Stderr
 	//executes command, listends to stdout, puts w/e into "out" var unless error
 	out, err := cmd.Output()
 	if err != nil {
