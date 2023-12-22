@@ -58,7 +58,7 @@ func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error
 }
 
 // Writes all the metrics contained in the SystemMetric m
-func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration) error {
+func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration, onWrite func()) error {
 	writeAPI := api.WriteAPI(api.Org, api.Bucket)
 
 	// Find the newest timestamp and go that many seconds back in time
@@ -73,6 +73,7 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 		x.Timestamp = current.Unix()
 		p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": m.Id}, x.ToMap(), current)
 		writeAPI.WritePoint(p)
+		onWrite()
 	}
 
 	// Write any remaining points

@@ -6,31 +6,52 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 func Fill(flags FillArgs) error {
-
 	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBArgs.Token, flags.DBArgs.Host, flags.DBArgs.Port, flags.DBArgs.Org, flags.DBArgs.Bucket, flags.DBArgs.Measurement)
 	defer influxDBApi.Close()
 
+	log.Printf("Filling database with metrics from %v files\n", len(flags.Files))
+	bar := progressbar.Default(int64(len(flags.Files)), "Processing files")
 	var wg sync.WaitGroup
 	for _, file := range flags.Files {
 		wg.Add(1)
-		go func(filePath string) {
+		go func(filePath string, bar *progressbar.ProgressBar) {
 			defer wg.Done()
 
 			id := GetIdFromFileName(filePath)
+			bar.Describe("Reading file " + filePath)
 			metric, _ := system_metrics.ReadFromFile(filePath, id)
+			bar.Add(1)
+			bar.Describe("Slicing metrics")
 
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
 			metric.SliceBetween(flags.StartAt, flags.Duration)
-			influxDBApi.WriteMetrics(*metric, flags.Gap)
-		}(file)
+
+			progressChan := make(chan int)
+			defer close(progressChan)
+
+			bar.ChangeMax(bar.GetMax() + len(metric.Metrics))
+			go func() {
+				for range progressChan {
+					bar.Add(1)
+				}
+			}()
+
+			bar.Describe("Writing metrics to database")
+			influxDBApi.WriteMetrics(*metric, flags.Gap, func() {
+				progressChan <- 1
+			})
+		}(file, bar)
 
 	}
 	wg.Wait()
-
+	bar.Finish()
+	log.Println("Finished filling database")
 	return nil
 }
 
