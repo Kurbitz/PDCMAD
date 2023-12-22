@@ -94,7 +94,7 @@ func Stream(flags StreamArgs) error {
 			return nil
 		}
 		influxDBApi.WriteMetric(*metric, id, insertTime)
-		log.Println("Inserted metric at", insertTime)
+		log.Printf("%v: metric written at %v\n", id, insertTime.Format(time.RFC3339))
 
 		timeDelta = (metrics.Metrics[i+1].Timestamp - metric.Timestamp)
 		insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
@@ -103,7 +103,7 @@ func Stream(flags StreamArgs) error {
 	}
 	// Handle the last metric
 	influxDBApi.WriteMetric(*metrics.Metrics[len(metrics.Metrics)-1], id, insertTime)
-	log.Println("Inserted metrics at", insertTime)
+	log.Printf("%v: metric written at %v\n", id, insertTime.Format(time.RFC3339))
 
 	return nil
 }
