@@ -139,12 +139,12 @@ func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 }
 
 func (api InfluxDBApi) WriteMetric(m system_metrics.Metric, id string, timeStamp time.Time) error {
-	writeAPI := api.WriteAPI(api.Org, api.Bucket)
+	writeAPI := api.WriteAPIBlocking(api.Org, api.Bucket)
 	m.Timestamp = timeStamp.Unix()
 	p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": id}, m.ToMap(), timeStamp)
-	writeAPI.WritePoint(p)
+	if err := writeAPI.WritePoint(context.Background(), p); err != nil {
+		return err
+	}
 
-	//Write the remaining point
-	writeAPI.Flush()
 	return nil
 }
