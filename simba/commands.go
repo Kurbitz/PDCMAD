@@ -84,6 +84,10 @@ func Stream(flags StreamArgs) error {
 	// If we are appending we need to calculate the time delta between the first two metrics
 	var timeDelta int64 = 0
 	if flags.Append {
+		if len(metrics.Metrics) < 2 {
+			log.Println("Not enough metrics to calculate time delta, exiting...")
+			return nil
+		}
 		timeDelta = (metrics.Metrics[1].Timestamp - metrics.Metrics[0].Timestamp)
 		insertTime = insertTime.Add(time.Duration(timeDelta) * time.Second)
 	}
