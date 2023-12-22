@@ -20,8 +20,6 @@ type FillArgs struct {
 	StartAt  time.Duration
 	Gap      time.Duration
 	Anomaly  string
-	AStart   time.Duration
-	AEnd     time.Duration
 	Files    []string
 }
 
@@ -35,8 +33,6 @@ type StreamArgs struct {
 	TimeMultiplier int
 	Append         bool
 	Anomaly        string
-	AStart         time.Duration
-	AEnd           time.Duration
 	File           string
 }
 
@@ -219,15 +215,17 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
+// checkANomalyString checks if the anomalyString given exists in the AnomalyMap
+// if it does not exists it returns an error
+// if it does exist or is empty the anomalyString gets returned
 func checkAnomalyString(anomalyString string) (string, error) {
 	if anomalyString == "" {
 		return anomalyString, nil
 	}
-	for key := range AnomalyMap {
-		if anomalyString == key {
-			return anomalyString, nil
-		}
+	if _, exists := AnomalyMap[anomalyString]; exists {
+		return anomalyString, nil
 	}
+
 	return anomalyString, fmt.Errorf("error injection %s is not implemented", anomalyString)
 }
 
@@ -307,7 +305,6 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if err != nil {
 		return nil, err
 	}
-	//TODO: check compatibility of the flags and give standard behaviour(empty aend should mean until the end)
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}

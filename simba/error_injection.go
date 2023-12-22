@@ -14,7 +14,7 @@ func injectAnomaly(metrics *system_metrics.SystemMetric, anomalyFlag string) err
 	if anomalyFlag == "" {
 		return nil
 	}
-	// Find the first metric that is after the startAt time
+	//Call the error injection function that is related to the anomalyFlag in the AnomalyMap
 	if err := AnomalyMap[anomalyFlag](metrics); err != nil {
 		return err
 	}

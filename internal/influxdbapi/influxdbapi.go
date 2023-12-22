@@ -13,7 +13,7 @@ import (
 
 // FIXME: Move to config file or something
 const (
-	ORG         = "PDC-MAD"
+	ORG         = "pdc-mad"
 	BUCKET      = "metrics"
 	MEASUREMENT = "test"
 )
@@ -56,7 +56,7 @@ func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error
 	return &metric, nil
 }
 
-func (api InfluxDBApi) WriteMetrics(m *system_metrics.SystemMetric, gap time.Duration) error {
+func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration) error {
 	writeAPI := api.WriteAPI(ORG, BUCKET)
 
 	// Find the newest timestamp and go that many seconds back in time
