@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"internal/system_metrics"
-	"log"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
+// InfluxDBApi is a struct containing the InfluxDB client and the
+// information needed to write to the database
 type InfluxDBApi struct {
 	influxdb2.Client
 	Org         string
@@ -18,6 +19,7 @@ type InfluxDBApi struct {
 	Measurement string
 }
 
+// Creates a new InfluxDBApi struct
 func NewInfluxDBApi(token, host, port, org, bucket, measurement string) InfluxDBApi {
 	return InfluxDBApi{
 		influxdb2.NewClient("http://"+host+":"+port, token),
@@ -27,7 +29,7 @@ func NewInfluxDBApi(token, host, port, org, bucket, measurement string) InfluxDB
 	}
 }
 
-// FIXME: There is probably a better way to do this, we need to test this thoroughly
+// Returns the last metric from the host h
 func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error) {
 	q := api.QueryAPI(api.Org)
 	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", api.Bucket, api.Measurement, host)
@@ -55,6 +57,7 @@ func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error
 	return &metric, nil
 }
 
+// Writes all the metrics contained in the SystemMetric m
 func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration) error {
 	writeAPI := api.WriteAPI(api.Org, api.Bucket)
 
