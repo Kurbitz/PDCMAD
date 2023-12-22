@@ -112,6 +112,18 @@ var cleanFlags = []cli.Flag{
 		Value:   "8086",
 	},
 	&cli.StringFlag{
+		Name:    "dborg",
+		Usage:   "InfluxDB organization",
+		EnvVars: []string{"INFLUXDB_ORG"},
+		Value:   "pdc-mad",
+	},
+	&cli.StringFlag{
+		Name:    "dbbucket",
+		Usage:   "InfluxDB bucket",
+		EnvVars: []string{"INFLUXDB_BUCKET"},
+		Value:   "pdc-mad",
+	},
+	&cli.StringFlag{
 		Name:  "startat",
 		Usage: "from where to delete relative to current time",
 		Value: "",
