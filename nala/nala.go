@@ -49,8 +49,6 @@ func main() {
 	log.Println("Starting Nala...")
 	pythonSmokeTest()
 
-	// Test-write a log message to /var/log/nala.log
-
 	router := gin.Default()
 
 	router.GET("/nala/trigger", triggerDetection)
