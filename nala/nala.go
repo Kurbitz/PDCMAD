@@ -26,6 +26,7 @@ func pythonSmokeTest() {
 
 	log.Println("Running python smoke test...")
 	cmd := exec.Command("python", "./testpy.py", "Python is working!")
+
 	//executes command, listends to stdout, puts w/e into "out" var unless error
 	out, err := cmd.Output()
 	if err != nil {
