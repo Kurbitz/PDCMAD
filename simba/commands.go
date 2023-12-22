@@ -10,7 +10,7 @@ import (
 
 func Fill(flags FillArgs) error {
 
-	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort, flags.DBOrg, flags.DBBucket, flags.DBMeasurement)
+	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBArgs.Token, flags.DBArgs.Host, flags.DBArgs.Port, flags.DBArgs.Org, flags.DBArgs.Bucket, flags.DBArgs.Measurement)
 	defer influxDBApi.Close()
 
 	var wg sync.WaitGroup
@@ -35,7 +35,7 @@ func Fill(flags FillArgs) error {
 }
 
 func Stream(flags StreamArgs) error {
-	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort, flags.DBOrg, flags.DBBucket, flags.DBMeasurement)
+	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBArgs.Token, flags.DBArgs.Host, flags.DBArgs.Port, flags.DBArgs.Org, flags.DBArgs.Bucket, flags.DBArgs.Measurement)
 	id := GetIdFromFileName(flags.File)
 
 	insertTime := time.Now()
@@ -88,7 +88,8 @@ func Stream(flags StreamArgs) error {
 }
 
 func Clean(flags CleanArgs) error {
-	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort, flags.DBOrg, flags.DBBucket, flags.DBMeasurement)
+	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBArgs.Token, flags.DBArgs.Host, flags.DBArgs.Port, flags.DBArgs.Org, flags.DBArgs.Bucket, flags.DBArgs.Measurement)
+
 	defer influxDBApi.Close()
 
 	if flags.All { // Clean the bucket

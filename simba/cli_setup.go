@@ -11,28 +11,27 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type DBInfo struct {
+	Token       string
+	Host        string
+	Port        string
+	Org         string
+	Bucket      string
+	Measurement string
+}
+
 // FillArgs is a struct containing the flags passed to the fill command
 type FillArgs struct {
-	DBToken       string
-	DBIp          string
-	DBPort        string
-	DBOrg         string
-	DBBucket      string
-	DBMeasurement string
-	Duration      time.Duration
-	StartAt       time.Duration
-	Gap           time.Duration
-	Files         []string
+	DBArgs   DBInfo
+	Duration time.Duration
+	StartAt  time.Duration
+	Gap      time.Duration
+	Files    []string
 }
 
 // StreamArgs is a struct containing the flags passed to the stream command
 type StreamArgs struct {
-	DBToken        string
-	DBIp           string
-	DBPort         string
-	DBOrg          string
-	DBBucket       string
-	DBMeasurement  string
+	DBArgs         DBInfo
 	Duration       time.Duration
 	Startat        time.Duration
 	TimeMultiplier int
@@ -42,15 +41,10 @@ type StreamArgs struct {
 
 // CleanArgs is a struct containing the flags passed to the clean command
 type CleanArgs struct {
-	DBToken       string
-	DBIp          string
-	DBPort        string
-	DBOrg         string
-	DBBucket      string
-	DBMeasurement string
-	All           bool
-	Startat       time.Duration
-	Hosts         []string
+	DBArgs  DBInfo
+	All     bool
+	Startat time.Duration
+	Hosts   []string
 }
 
 // Common flags for the simulate command
@@ -62,9 +56,9 @@ var simulateFlags = []cli.Flag{
 		Value:   "",
 	},
 	&cli.StringFlag{
-		Name:    "dbip",
-		EnvVars: []string{"INFLUXDB_IP"},
-		Usage:   "InfluxDB IP",
+		Name:    "dbhost",
+		EnvVars: []string{"INFLUXDB_HOST"},
+		Usage:   "InfluxDB hostname",
 		Value:   "localhost",
 	},
 	&cli.StringFlag{
@@ -278,16 +272,18 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	}
 
 	return &FillArgs{
-		DBToken:       ctx.String("dbtoken"),
-		DBIp:          ctx.String("dbip"),
-		DBPort:        ctx.String("dbport"),
-		DBOrg:         ctx.String("dborg"),
-		DBBucket:      ctx.String("dbbucket"),
-		DBMeasurement: "metrics",
-		Duration:      duration,
-		StartAt:       startAt,
-		Gap:           gap,
-		Files:         files,
+		DBArgs: DBInfo{
+			Token:       ctx.String("dbtoken"),
+			Host:        ctx.String("dbip"),
+			Port:        ctx.String("dbport"),
+			Org:         ctx.String("dborg"),
+			Bucket:      ctx.String("dbbucket"),
+			Measurement: "metrics",
+		},
+		Duration: duration,
+		StartAt:  startAt,
+		Gap:      gap,
+		Files:    files,
 	}, nil
 }
 
@@ -317,12 +313,14 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	}
 
 	return &StreamArgs{
-		DBToken:        ctx.String("dbtoken"),
-		DBIp:           ctx.String("dbip"),
-		DBPort:         ctx.String("dbport"),
-		DBOrg:          ctx.String("dborg"),
-		DBBucket:       ctx.String("dbbucket"),
-		DBMeasurement:  "metrics",
+		DBArgs: DBInfo{
+			Token:       ctx.String("dbtoken"),
+			Host:        ctx.String("dbip"),
+			Port:        ctx.String("dbport"),
+			Org:         ctx.String("dborg"),
+			Bucket:      ctx.String("dbbucket"),
+			Measurement: "metrics",
+		},
 		Duration:       duration,
 		Startat:        startAt,
 		TimeMultiplier: ctx.Int("timemultiplier"),
@@ -361,15 +359,17 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	hosts := ctx.Args().Slice()
 
 	return &CleanArgs{
-		DBToken:       ctx.String("dbtoken"),
-		DBIp:          ctx.String("dbip"),
-		DBPort:        ctx.String("dbport"),
-		DBOrg:         ctx.String("dborg"),
-		DBBucket:      ctx.String("dbbucket"),
-		DBMeasurement: "metrics",
-		All:           ctx.Bool("all"),
-		Startat:       startAt,
-		Hosts:         hosts,
+		DBArgs: DBInfo{
+			Token:       ctx.String("dbtoken"),
+			Host:        ctx.String("dbip"),
+			Port:        ctx.String("dbport"),
+			Org:         ctx.String("dborg"),
+			Bucket:      ctx.String("dbbucket"),
+			Measurement: "metrics",
+		},
+		All:     ctx.Bool("all"),
+		Startat: startAt,
+		Hosts:   hosts,
 	}, nil
 }
 
