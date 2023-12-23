@@ -107,12 +107,12 @@ func logAnomalies(anomalies []AnomalyMetric, host string) {
 	if anomalies == nil || host == "" {
 		panic("anomalies or host is missing")
 	}
-	outputArray := []Output{}
-	for _, v := range anomalies { //len(anomalies)
+	outputArray := []Anomaly{}
+	for _, v := range anomalies {
 		r := reflect.ValueOf(v)
 		for i := 1; i < r.NumField(); i++ {
 			if r.Field(i).Interface() == true {
-				outputArray = append(outputArray, Output{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Name, Coment: ""})
+				outputArray = append(outputArray, Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Coment: ""})
 			}
 		}
 	}
@@ -123,7 +123,7 @@ func logAnomalies(anomalies []AnomalyMetric, host string) {
 	return
 }
 
-type Output struct {
+type Anomaly struct {
 	Timestamp int64  `csv:"timestamp" json:"timestamp"`
 	Host      string `csv:"host" json:"host"`
 	Metric    string `csv:"metric" json:"metric"`
