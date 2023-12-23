@@ -45,23 +45,24 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 	//Sets Arguments to the command
 	outputFile, err := os.Create("logs/go_output.csv")
 	if err != nil {
-		log.Println(err)
+		log.Printf("Error when creating file: %v", err)
 		return err
 	}
 	defer outputFile.Close()
-	gocsv.MarshalFile(&data.Metrics, outputFile)
+	err = gocsv.MarshalFile(&data.Metrics, outputFile)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Error while parsing metrics from file: %v", err)
 		return err
 	}
 	fullPath := PATH + filename
 	inputFilePath := "../nala/logs/go_output.csv"
 	outputFilePath := "../nala/logs/py_output.csv"
+	//Sets Arguments to the command
 	cmd := exec.Command("python", fullPath, inputFilePath, outputFilePath)
 	cmd.Stderr = os.Stderr
-	//executes command, listends to stdout, puts w/e into "out" var unless error
+	//executes command without regards of output. If output is needed change to cmd.Output()
 	if err := cmd.Run(); err != nil {
-		log.Println(err)
+		log.Printf("Error when running anomaly detection script: %v", err)
 		return err
 	}
 
@@ -83,7 +84,7 @@ func transformOutput(filename string) ([]AnomalyMetric, error) {
 	anomalyData := []AnomalyMetric{}
 	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Error when opening file: %v", err)
 		return []AnomalyMetric{}, err
 	}
 	defer inputFile.Close()
