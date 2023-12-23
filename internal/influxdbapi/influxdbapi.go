@@ -58,6 +58,13 @@ func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error
 
 func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Duration) error {
 	writeAPI := api.WriteAPI(ORG, BUCKET)
+	errChan := writeAPI.Errors()
+	//Basic handler for error, can catch and print them
+	go func() {
+		for err := range errChan {
+			fmt.Printf("write error on %s: %s\n", m.Id, err)
+		}
+	}()
 
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
@@ -142,6 +149,13 @@ func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 
 func (api InfluxDBApi) WriteMetric(m system_metrics.Metric, id string, timeStamp time.Time) error {
 	writeAPI := api.WriteAPI(ORG, BUCKET)
+	errChan := writeAPI.Errors()
+	//Basic handler for error, can catch and print them
+	go func() {
+		for err := range errChan {
+			fmt.Printf("write error on %s: %s\n", id, err)
+		}
+	}()
 	m.Timestamp = timeStamp.Unix()
 	p := influxdb2.NewPoint(MEASUREMENT, map[string]string{"host": id}, m.ToMap(), timeStamp)
 	writeAPI.WritePoint(p)
