@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"internal/influxdbapi"
 	"internal/system_metrics"
 	"log"
@@ -56,7 +57,8 @@ func Stream(flags StreamArgs) error {
 
 		insertTime = time.Unix(lastMetric.Timestamp, 0)
 	} else if flags.TimeMultiplier > 1 {
-		log.Fatal("Timemultiplier can only be set while appending")
+
+		return fmt.Errorf("Timemultiplier can only be set while appending")
 	}
 
 	metrics, err := system_metrics.ReadFromFile(flags.File, id)
@@ -77,8 +79,7 @@ func Stream(flags StreamArgs) error {
 	// Insert all metrics except the last one
 	for i, metric := range metrics.Metrics[:len(metrics.Metrics)-1] {
 		if insertTime.After(time.Now()) {
-			log.Println("You have exceeded the current time. The time multiplier might be too high, exiting...")
-			return nil
+			return fmt.Errorf("You have exceeded the current time. The time multiplier might be too high, exiting...")
 		}
 		influxDBApi.WriteMetric(*metric, id, insertTime)
 		log.Println("Inserted metric at", insertTime)
