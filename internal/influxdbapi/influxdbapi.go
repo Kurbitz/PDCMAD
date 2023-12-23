@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"internal/system_metrics"
-	"log"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -30,6 +29,7 @@ func NewInfluxDBApi(token, host, port string) InfluxDBApi {
 
 // FIXME: There is probably a better way to do this, we need to test this thoroughly
 func (api InfluxDBApi) GetLastMetric(host string) (*system_metrics.Metric, error) {
+
 	q := api.QueryAPI(ORG)
 	query := fmt.Sprintf("from(bucket:\"%v\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"%v\") |> filter(fn: (r) => r.host == \"%v\")|> last()", BUCKET, MEASUREMENT, host)
 	result, err := q.Query(context.Background(), query)
@@ -62,7 +62,7 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 	// Find the newest timestamp and go that many seconds back in time
 	// FIXME: Maybe add time as parameter
 	if time.Duration(time.Duration.Seconds(gap)) > time.Duration(m.Metrics[len(m.Metrics)-1].Timestamp) {
-		log.Fatal("Gap exceeds length of the metric file")
+		return fmt.Errorf("Gap exceeds length of the metric file")
 	}
 	now := time.Now().Local()
 	end := now.Add(-gap)
@@ -79,6 +79,7 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 
 	// Write any remaining points
 	writeAPI.Flush()
+
 	// FIXME: Handle errors
 	return nil
 }

@@ -113,7 +113,7 @@ func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 
 	metrics := []*Metric{}
 	if err := gocsv.UnmarshalFile(file, &metrics); err != nil {
-		panic(err)
+		return nil, err
 	}
 	var systemMetrics = SystemMetric{Id: id, Metrics: metrics}
 
