@@ -25,6 +25,15 @@ func triggerDetection(ctx *gin.Context) {
 	defer dbapi.Close()
 	host := ctx.Param("host")
 	duration := ctx.Param("duration")
+	//These checks might be in simba instead?
+	if host == "" {
+		ctx.String(http.StatusOK, "Host field is empty")
+		return
+	}
+	if duration == "" {
+		ctx.String(http.StatusOK, "Duration field is empty")
+		return
+	}
 	if message, err := dbapi.GetMetrics(host, duration); err == nil {
 		go func() {
 			if err := triggerIsolationForest("outliers.py", message, host); err != nil {
@@ -104,9 +113,6 @@ Logfile output: [time, host, metric, comment]
 Returns error if something fails
 */
 func logAnomalies(anomalies []AnomalyMetric, host string) {
-	if anomalies == nil || host == "" {
-		panic("anomalies or host is missing")
-	}
 	outputArray := []Anomaly{}
 	for _, v := range anomalies {
 		r := reflect.ValueOf(v)
