@@ -37,7 +37,7 @@ func triggerDetection(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
 		return
 	}
-	ctx.String(http.StatusOK, "Anomaly detection triggered!")
+	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
 }
 
 // Runs "outliers.py" and wraps the output
@@ -57,16 +57,21 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 	fullPath := PATH + filename
 	inputFilePath := "../nala/logs/go_output.csv"
 	outputFilePath := "../nala/logs/py_output.csv"
-	cmd := exec.Command(PATH+"/bin/python", fullPath, inputFilePath, outputFilePath)
+	cmd := exec.Command("python", fullPath, inputFilePath, outputFilePath)
 	cmd.Stderr = os.Stderr
 	anomalyData := system_metrics.SystemMetric{Id: data.Id}
 	//executes command, listends to stdout, puts w/e into "out" var unless error
+	if err := cmd.Run(); err != nil {
 		log.Println(err)
 		return err
+	}
+
+	anomalies, err := transformOutput("logs/dummyOutput.csv")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
+	logAnomalies(anomalies, host)
 	return nil
 }
 
@@ -80,12 +85,16 @@ func transformOutput(filename string) ([]AnomalyMetric, error) {
 	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		log.Println(err)
+		return []AnomalyMetric{}, err
 	}
 	defer inputFile.Close()
 	if err = gocsv.UnmarshalFile(inputFile, &anomalyData); err != nil {
 		log.Printf("Error when parsing anomaly detection csv: '%v'", err)
+		return []AnomalyMetric{}, err
 	}
-	log.Println(anomalyData[0])
+	if len(anomalyData) == 0 {
+		return []AnomalyMetric{}, fmt.Errorf("Output of anomaly detection is empty")
+	}
 	return anomalyData, nil
 }
 
