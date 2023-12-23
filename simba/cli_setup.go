@@ -92,7 +92,7 @@ var simulateFlags = []cli.Flag{
 		Value:    "localhost",
 		Category: "Database",
 		Aliases: []string{
-			"i",
+			"h",
 		},
 	},
 	&cli.StringFlag{
@@ -153,11 +153,14 @@ var cleanFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:     "dbip",
-		EnvVars:  []string{"INFLUXDB_IP"},
+		Name:     "dbhost",
+		EnvVars:  []string{"INFLUXDB_HOST"},
 		Usage:    "InfluxDB IP",
 		Value:    "localhost",
 		Category: "Database",
+		Aliases: []string{
+			"h",
+		},
 	},
 	&cli.StringFlag{
 		Name:     "dbport",
@@ -359,7 +362,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	return &FillArgs{
 		DBArgs: DBInfo{
 			Token:       ctx.String("dbtoken"),
-			Host:        ctx.String("dbip"),
+			Host:        ctx.String("dbhost"),
 			Port:        ctx.String("dbport"),
 			Org:         ctx.String("dborg"),
 			Bucket:      ctx.String("dbbucket"),
@@ -404,7 +407,7 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	return &StreamArgs{
 		DBArgs: DBInfo{
 			Token:       ctx.String("dbtoken"),
-			Host:        ctx.String("dbip"),
+			Host:        ctx.String("dbhost"),
 			Port:        ctx.String("dbport"),
 			Org:         ctx.String("dborg"),
 			Bucket:      ctx.String("dbbucket"),
@@ -451,7 +454,7 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	return &CleanArgs{
 		DBArgs: DBInfo{
 			Token:       ctx.String("dbtoken"),
-			Host:        ctx.String("dbip"),
+			Host:        ctx.String("dbhost"),
 			Port:        ctx.String("dbport"),
 			Org:         ctx.String("dborg"),
 			Bucket:      ctx.String("dbbucket"),
