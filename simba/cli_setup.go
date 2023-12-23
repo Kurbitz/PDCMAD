@@ -52,93 +52,142 @@ type CleanArgs struct {
 // Common flags for the simulate command
 var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
-		Name:    "dbtoken",
-		EnvVars: []string{"INFLUXDB_TOKEN"},
-		Usage:   "InfluxDB token",
-		Value:   "",
-	},
-	&cli.StringFlag{
-		Name:    "dbhost",
-		EnvVars: []string{"INFLUXDB_HOST"},
-		Usage:   "InfluxDB hostname",
-		Value:   "localhost",
-	},
-	&cli.StringFlag{
-		Name:    "dbport",
-		EnvVars: []string{"INFLUXDB_PORT"},
-		Usage:   "InfluxDB port",
-		Value:   "8086",
-	},
-	&cli.StringFlag{
-		Name:    "dborg",
-		Usage:   "InfluxDB organization",
-		EnvVars: []string{"INFLUXDB_ORG"},
-		Value:   "pdc-mad",
-	},
-	&cli.StringFlag{
-		Name:    "dbbucket",
-		Usage:   "InfluxDB bucket",
-		EnvVars: []string{"INFLUXDB_BUCKET"},
-		Value:   "pdc-mad",
-	},
-	&cli.StringFlag{
 		Name:  "duration",
 		Usage: "Duration",
 		Value: "",
+		Aliases: []string{
+			"d",
+		},
 	},
 	&cli.StringFlag{
 		Name:  "startat",
 		Usage: "Starting line in file",
 		Value: "",
+		Aliases: []string{
+			"s",
+		},
 	},
 	&cli.StringFlag{
 		Name:  "anomaly",
 		Usage: "Select which type of anomaly to use",
 		Value: "",
+		Aliases: []string{
+			"a",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dbtoken",
+		EnvVars:  []string{"INFLUXDB_TOKEN"},
+		Usage:    "InfluxDB token",
+		Value:    "",
+		Category: "Database",
+		Aliases: []string{
+			"t",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dbhost",
+		EnvVars:  []string{"INFLUXDB_HOST"},
+		Usage:    "InfluxDB hostname",
+		Value:    "localhost",
+		Category: "Database",
+		Aliases: []string{
+			"i",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dbport",
+		EnvVars:  []string{"INFLUXDB_PORT"},
+		Usage:    "InfluxDB port",
+		Value:    "8086",
+		Category: "Database",
+		Aliases: []string{
+			"p",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dborg",
+		Usage:    "InfluxDB organization",
+		EnvVars:  []string{"INFLUXDB_ORG"},
+		Value:    "pdc-mad",
+		Category: "Database",
+		Aliases: []string{
+			"o",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dbbucket",
+		Usage:    "InfluxDB bucket",
+		EnvVars:  []string{"INFLUXDB_BUCKET"},
+		Value:    "pdc-mad",
+		Category: "Database",
+		Aliases: []string{
+			"b",
+		},
 	},
 }
 
 // Flags for the clean command
 var cleanFlags = []cli.Flag{
 	&cli.StringFlag{
-		Name:    "dbtoken",
-		EnvVars: []string{"INFLUXDB_TOKEN"},
-		Usage:   "InfluxDB token",
-		Value:   "",
-	},
-	&cli.StringFlag{
-		Name:    "dbip",
-		EnvVars: []string{"INFLUXDB_IP"},
-		Usage:   "InfluxDB IP",
-		Value:   "localhost",
-	},
-	&cli.StringFlag{
-		Name:    "dbport",
-		EnvVars: []string{"INFLUXDB_PORT"},
-		Usage:   "InfluxDB port",
-		Value:   "8086",
-	},
-	&cli.StringFlag{
-		Name:    "dborg",
-		Usage:   "InfluxDB organization",
-		EnvVars: []string{"INFLUXDB_ORG"},
-		Value:   "pdc-mad",
-	},
-	&cli.StringFlag{
-		Name:    "dbbucket",
-		Usage:   "InfluxDB bucket",
-		EnvVars: []string{"INFLUXDB_BUCKET"},
-		Value:   "pdc-mad",
-	},
-	&cli.StringFlag{
 		Name:  "startat",
 		Usage: "from where to delete relative to current time",
 		Value: "",
+		Aliases: []string{
+			"s",
+		},
 	},
 	&cli.BoolFlag{
 		Name:  "all",
 		Usage: "delete metrics from all the hosts of the bucket",
 		Value: false,
+	},
+	&cli.StringFlag{
+		Name:     "dbtoken",
+		EnvVars:  []string{"INFLUXDB_TOKEN"},
+		Usage:    "InfluxDB token",
+		Value:    "",
+		Category: "Database",
+		Aliases: []string{
+			"t",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dbip",
+		EnvVars:  []string{"INFLUXDB_IP"},
+		Usage:    "InfluxDB IP",
+		Value:    "localhost",
+		Category: "Database",
+	},
+	&cli.StringFlag{
+		Name:     "dbport",
+		EnvVars:  []string{"INFLUXDB_PORT"},
+		Usage:    "InfluxDB port",
+		Value:    "8086",
+		Category: "Database",
+		Aliases: []string{
+			"p",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dborg",
+		Usage:    "InfluxDB organization",
+		EnvVars:  []string{"INFLUXDB_ORG"},
+		Value:    "pdc-mad",
+		Category: "Database",
+		Aliases: []string{
+			"o",
+		},
+	},
+	&cli.StringFlag{
+		Name:     "dbbucket",
+		Usage:    "InfluxDB bucket",
+		EnvVars:  []string{"INFLUXDB_BUCKET"},
+		Value:    "pdc-mad",
+		Category: "Database",
+		Aliases: []string{
+			"b",
+		},
 	},
 }
 
@@ -167,6 +216,9 @@ var App = &cli.App{
 						Name:  "gap",
 						Usage: "Gap to now",
 						Value: "",
+						Aliases: []string{
+							"g",
+						},
 					}),
 				},
 				{
@@ -178,6 +230,9 @@ var App = &cli.App{
 						Name:  "timemultiplier",
 						Usage: "Increase insertion speed",
 						Value: 1,
+						Aliases: []string{
+							"m",
+						},
 					}, &cli.BoolFlag{
 						Name:  "append",
 						Usage: "Insert from the latest metric",
@@ -200,13 +255,6 @@ var App = &cli.App{
 				fmt.Println("trigger")
 				return nil
 			},
-		},
-	},
-	// FIXME: Make these persistent flags instead. Only supported in v3 alpha right now though.
-	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:  "verbose",
-			Usage: "Enable verbose output",
 		},
 	},
 }
