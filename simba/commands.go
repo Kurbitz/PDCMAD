@@ -16,7 +16,7 @@ func Fill(flags FillArgs) error {
 	var wg sync.WaitGroup
 	for _, file := range flags.Files {
 		wg.Add(1)
-		go func(filePath string) {
+		go func(filePath string) error {
 			defer wg.Done()
 
 			id := GetIdFromFileName(filePath)
@@ -25,7 +25,12 @@ func Fill(flags FillArgs) error {
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
 			metric.SliceBetween(flags.StartAt, flags.Duration)
+			if err := injectAnomaly(metric, flags.Anomaly); err != nil {
+				return err
+			}
+
 			influxDBApi.WriteMetrics(*metric, flags.Gap)
+			return nil
 		}(file)
 
 	}
@@ -59,6 +64,9 @@ func Stream(flags StreamArgs) error {
 		return err
 	}
 	metrics.SliceBetween(flags.Startat, flags.Duration)
+	if err := injectAnomaly(metrics, flags.Anomaly); err != nil {
+		return err
+	}
 
 	// If we are appending we need to calculate the time delta between the first two metrics
 	var timeDelta int64 = 0

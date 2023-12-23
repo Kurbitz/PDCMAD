@@ -14,8 +14,8 @@ import (
 // FIXME: Move to config file or something
 const (
 	ORG         = "pdc-mad"
-	BUCKET      = "pdc-mad"
-	MEASUREMENT = "metrics"
+	BUCKET      = "metrics"
+	MEASUREMENT = "test"
 )
 
 type InfluxDBApi struct {
