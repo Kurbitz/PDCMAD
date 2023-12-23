@@ -14,7 +14,7 @@ import (
 // FIXME: Move to config file or something
 const (
 	ORG         = "pdc-mad"
-	BUCKET      = "simba"
+	BUCKET      = "metrics"
 	MEASUREMENT = "test"
 )
 
