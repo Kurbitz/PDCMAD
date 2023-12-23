@@ -1,3 +1,4 @@
 dataset/*
 **.env
 .vscode/
+nala/anomaly_detection/pyvenv.cfg
