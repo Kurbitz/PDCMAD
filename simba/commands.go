@@ -19,7 +19,8 @@ func Fill(flags FillArgs) error {
 	var wg sync.WaitGroup
 	for _, file := range flags.Files {
 		wg.Add(1)
-		go func(filePath string, bar *progressbar.ProgressBar) {
+
+		go func(filePath string, bar *progressbar.ProgressBar) error {
 			defer wg.Done()
 
 			id := GetIdFromFileName(filePath)
@@ -36,6 +37,14 @@ func Fill(flags FillArgs) error {
 			defer close(progressChan)
 
 			bar.ChangeMax(bar.GetMax() + len(metric.Metrics))
+
+			if len(flags.Anomaly) > 0 {
+				bar.Describe("Injecting anomaly")
+				if err := injectAnomaly(metric, flags.Anomaly); err != nil {
+					return err
+				}
+			}
+
 			go func() {
 				for range progressChan {
 					bar.Add(1)
@@ -46,8 +55,9 @@ func Fill(flags FillArgs) error {
 			influxDBApi.WriteMetrics(*metric, flags.Gap, func() {
 				progressChan <- 1
 			})
-		}(file, bar)
+			return nil
 
+		}(file, bar)
 	}
 	wg.Wait()
 	bar.Finish()
@@ -80,6 +90,9 @@ func Stream(flags StreamArgs) error {
 		return err
 	}
 	metrics.SliceBetween(flags.Startat, flags.Duration)
+	if err := injectAnomaly(metrics, flags.Anomaly); err != nil {
+		return err
+	}
 
 	// If we are appending we need to calculate the time delta between the first two metrics
 	var timeDelta int64 = 0

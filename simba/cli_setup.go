@@ -26,6 +26,7 @@ type FillArgs struct {
 	Duration time.Duration
 	StartAt  time.Duration
 	Gap      time.Duration
+	Anomaly  string
 	Files    []string
 }
 
@@ -36,6 +37,7 @@ type StreamArgs struct {
 	Startat        time.Duration
 	TimeMultiplier int
 	Append         bool
+	Anomaly        string
 	File           string
 }
 
@@ -87,6 +89,11 @@ var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:  "startat",
 		Usage: "Starting line in file",
+		Value: "",
+	},
+	&cli.StringFlag{
+		Name:  "anomaly",
+		Usage: "Select which type of anomaly to use",
 		Value: "",
 	},
 }
@@ -235,6 +242,20 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	return 0, fmt.Errorf("invalid time string: %s", ds)
 }
 
+// checkANomalyString checks if the anomalyString given exists in the AnomalyMap
+// if it does not exists it returns an error
+// if it does exist or is empty the anomalyString gets returned
+func checkAnomalyString(anomalyString string) (string, error) {
+	if anomalyString == "" {
+		return anomalyString, nil
+	}
+	if _, exists := AnomalyMap[anomalyString]; exists {
+		return anomalyString, nil
+	}
+
+	return anomalyString, fmt.Errorf("error injection %s is not implemented", anomalyString)
+}
+
 func ValidateFile(file string) error {
 	// Validate the file exists
 	if _, err := os.Stat(file); os.IsNotExist(err) {
@@ -271,6 +292,10 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if err != nil {
 		return nil, err
 	}
+	anomalyString, err := checkAnomalyString(ctx.String("anomaly"))
+	if err != nil {
+		return nil, err
+	}
 
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file(s). See -h for help")
@@ -295,6 +320,7 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 		Duration: duration,
 		StartAt:  startAt,
 		Gap:      gap,
+		Anomaly:  anomalyString,
 		Files:    files,
 	}, nil
 }
@@ -311,12 +337,15 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}
 	if ctx.Int("timemultiplier") < 1 {
 		return nil, fmt.Errorf("timemultiplier cannot be a lower than 1")
+	}
+	anomalyString, err := checkAnomalyString(ctx.String("anomaly"))
+	if err != nil {
+		return nil, err
 	}
 	file := ctx.Args().Slice()[0]
 	err = ValidateFile(file)
@@ -337,6 +366,7 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 		Startat:        startAt,
 		TimeMultiplier: ctx.Int("timemultiplier"),
 		Append:         ctx.Bool("append"),
+		Anomaly:        anomalyString,
 		File:           file,
 	}, nil
 }
