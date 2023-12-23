@@ -27,7 +27,10 @@ func triggerDetection(ctx *gin.Context) {
 	duration := ctx.Param("duration")
 	if message, err := dbapi.GetMetrics(host, duration); err == nil {
 		go func() {
-			triggerIsolationForest("outliers.py", message, host)
+			if err := triggerIsolationForest("outliers.py", message, host); err != nil {
+				log.Printf("Anomaly detection failed with: %v\n", err)
+				return
+			}
 			log.Println("Anomaly detection is done!")
 		}()
 	} else {
@@ -38,16 +41,18 @@ func triggerDetection(ctx *gin.Context) {
 }
 
 // Runs "outliers.py" and wraps the output
-func triggerIsolationForest(filename string, data system_metrics.SystemMetric, host string) {
+func triggerIsolationForest(filename string, data system_metrics.SystemMetric, host string) error {
 	//Sets Arguments to the command
 	outputFile, err := os.Create("logs/go_output.csv")
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 	defer outputFile.Close()
 	gocsv.MarshalFile(&data.Metrics, outputFile)
 	if err != nil {
 		log.Println(err)
+		return err
 	}
 	fullPath := PATH + filename
 	inputFilePath := "../nala/logs/go_output.csv"
@@ -56,29 +61,13 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 	cmd.Stderr = os.Stderr
 	anomalyData := system_metrics.SystemMetric{Id: data.Id}
 	//executes command, listends to stdout, puts w/e into "out" var unless error
-	if out, err := cmd.Output(); err != nil {
 		log.Println(err)
-		log.Println(string(out))
-	} else {
-		fmt.Println(string(out))
-		inputFile, err := os.OpenFile("logs/py_output.csv", os.O_RDONLY, os.ModePerm)
-		if err != nil {
-			log.Println(err)
-		}
-		defer inputFile.Close()
-		if err = gocsv.UnmarshalFile(inputFile, &anomalyData.Metrics); err != nil {
-			log.Printf("Error when parsing anomaly detection csv: '%v'", err)
-		}
-		log.Println(anomalyData.Metrics[0].Cpu_System)
-		//TODO wrap anomaly output
-		//anomalies, err := transformOutput(outputFilePath)
-		anomalies, err := transformOutput("logs/dummyOutput.csv")
-		if err != nil {
-			log.Println(err)
-		}
-		logAnomalies(anomalies, host)
+		return err
+	if err != nil {
+		log.Println(err)
+		return err
 	}
-
+	return nil
 }
 
 /*
