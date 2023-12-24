@@ -49,7 +49,7 @@ func triggerDetection(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
 }
 
-func writeToFile(filePath string, data system_metrics.SystemMetric) error {
+func writeDataToFile(filePath string, data system_metrics.SystemMetric) error {
 	outputFile, err := os.Create(filePath)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
@@ -66,7 +66,7 @@ func writeToFile(filePath string, data system_metrics.SystemMetric) error {
 
 // Runs "outliers.py" and wraps the output
 func triggerIsolationForest(filename string, data system_metrics.SystemMetric, host string) error {
-	if err := writeToFile("logs/go_output.csv", data); err != nil {
+	if err := writeDataToFile("logs/go_output.csv", data); err != nil {
 		return err
 	}
 	fullPath := PATH + filename
@@ -115,6 +115,22 @@ func transformOutput(filename string) ([]AnomalyMetric, error) {
 	return anomalyData, nil
 }
 
+// This should not be a separate function and use an interface between systemmetric and anomaly
+func writeAnomaliesToFile(filePath string, data []Anomaly) error {
+	outputFile, err := os.Create(filePath)
+	if err != nil {
+		log.Printf("Error when creating file: %v", err)
+		return err
+	}
+	defer outputFile.Close()
+	err = gocsv.MarshalFile(&data, outputFile)
+	if err != nil {
+		log.Printf("Error while parsing metrics from file: %v", err)
+		return err
+	}
+	return nil
+}
+
 /*
 Takes AnomalyMetric struct and writes it to a log file
 Logfile output: [time, host, metric, comment]
@@ -126,14 +142,12 @@ func logAnomalies(anomalies []AnomalyMetric, host string) {
 		r := reflect.ValueOf(v)
 		for i := 1; i < r.NumField(); i++ {
 			if r.Field(i).Interface() == true {
-				outputArray = append(outputArray, Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Coment: ""})
+				outputArray = append(outputArray, Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
 			}
 		}
 	}
 	//TODO write output data to database
-	for _, o := range outputArray {
-		println(o.Timestamp, o.Host, o.Metric, o.Coment)
-	}
+	writeAnomaliesToFile("logs/anomalies.csv", outputArray)
 	return
 }
 
@@ -141,7 +155,7 @@ type Anomaly struct {
 	Timestamp int64  `csv:"timestamp" json:"timestamp"`
 	Host      string `csv:"host" json:"host"`
 	Metric    string `csv:"metric" json:"metric"`
-	Coment    string `csv:"coment" json:"coment"`
+	Comment   string `csv:"comment" json:"comment"`
 }
 
 type AnomalyMetric struct {
