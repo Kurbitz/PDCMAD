@@ -117,7 +117,7 @@ func transformOutput(filename string) ([]AnomalyMetric, error) {
 
 // This should not be a separate function and use an interface between systemmetric and anomaly
 func writeAnomaliesToFile(filePath string, data []Anomaly) error {
-	outputFile, err := os.Create(filePath)
+	outputFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
