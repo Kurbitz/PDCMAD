@@ -19,8 +19,8 @@ const (
 	PATH = "../anomaly_detection/"
 )
 
-// TODO Create a trigger endpoint
 func triggerDetection(ctx *gin.Context) {
+	//TODO change to environment variables
 	dbapi := influxdbapi.NewInfluxDBApi("KBntTYJdaWbknRyM-CAw29iYdJmQkiK6C1vlEO3B5yuvgGJlmG4Gasps5rTRGflLq7bRSSWZSA_zdnYhpu-HXQ==", "localhost", "8086")
 	defer dbapi.Close()
 	host := ctx.Param("host")
@@ -49,10 +49,8 @@ func triggerDetection(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
 }
 
-// Runs "outliers.py" and wraps the output
-func triggerIsolationForest(filename string, data system_metrics.SystemMetric, host string) error {
-	//Sets Arguments to the command
-	outputFile, err := os.Create("logs/go_output.csv")
+func writeToFile(filePath string, data system_metrics.SystemMetric) error {
+	outputFile, err := os.Create(filePath)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
@@ -63,11 +61,20 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 		log.Printf("Error while parsing metrics from file: %v", err)
 		return err
 	}
+	return nil
+}
+
+// Runs "outliers.py" and wraps the output
+func triggerIsolationForest(filename string, data system_metrics.SystemMetric, host string) error {
+	if err := writeToFile("logs/go_output.csv", data); err != nil {
+		return err
+	}
 	fullPath := PATH + filename
 	inputFilePath := "../nala/logs/go_output.csv"
 	outputFilePath := "../nala/logs/py_output.csv"
 	//Sets Arguments to the command
 	cmd := exec.Command("python", fullPath, inputFilePath, outputFilePath)
+	//Better information in case of error in script execution
 	cmd.Stderr = os.Stderr
 	//executes command without regards of output. If output is needed change to cmd.Output()
 	if err := cmd.Run(); err != nil {
@@ -77,7 +84,6 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 
 	anomalies, err := transformOutput("logs/dummyOutput.csv")
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	logAnomalies(anomalies, host)
@@ -122,7 +128,7 @@ func logAnomalies(anomalies []AnomalyMetric, host string) {
 			}
 		}
 	}
-	//TODO push output data to database
+	//TODO write output data to database
 	for _, o := range outputArray {
 		println(o.Timestamp, o.Host, o.Metric, o.Coment)
 	}
