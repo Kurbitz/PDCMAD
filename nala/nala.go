@@ -67,6 +67,7 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 	inputFilePath := "../nala/logs/go_output.csv"
 	outputFilePath := "../nala/logs/py_output.csv"
 	//Sets Arguments to the command
+
 	cmd := exec.Command("python", fullPath, inputFilePath, outputFilePath)
 	cmd.Stderr = os.Stderr
 	//executes command without regards of output. If output is needed change to cmd.Output()
@@ -76,6 +77,7 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 	}
 
 	anomalies, err := transformOutput("logs/dummyOutput.csv")
+
 	if err != nil {
 		log.Println(err)
 		return err
