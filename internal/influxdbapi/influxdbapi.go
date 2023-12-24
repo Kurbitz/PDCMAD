@@ -3,7 +3,6 @@ package influxdbapi
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"internal/system_metrics"
 	"log"
@@ -65,7 +64,7 @@ func (api InfluxDBApi) GetMetrics(host, duration string) (system_metrics.SystemM
 	}
 	if result == nil {
 		log.Printf("Duration '%v' on bucket '%v' is empty", duration, BUCKET)
-		return system_metrics.SystemMetric{}, errors.New("Empty query result")
+		return system_metrics.SystemMetric{}, fmt.Errorf("Empty query result")
 	}
 	var metrics []map[string]interface{}
 	// Use Next() to iterate over query result lines
