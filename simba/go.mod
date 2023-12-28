@@ -23,6 +23,10 @@ replace internal/system_metrics => ../internal/system_metrics
 
 replace internal/influxdbapi => ../internal/influxdbapi
 
+replace internal/logger => ../internal/logger
+
 require internal/system_metrics v1.0.0
 
 require internal/influxdbapi v1.0.0
+
+require internal/logger v1.0.0

@@ -34,3 +34,5 @@ require (
 replace internal/system_metrics => ../internal/system_metrics
 
 replace internal/influxdbapi => ../internal/influxdbapi
+
+replace internal/logger => ../internal/logger

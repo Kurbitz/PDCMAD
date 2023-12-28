@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"internal/influxdbapi"
+	"internal/logger"
 	"internal/system_metrics"
 	"log"
 	"sync"
@@ -12,8 +13,9 @@ import (
 func Fill(flags FillArgs) error {
 
 	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
+	var log = logger.NewLogger()
+	println(log)
 	defer influxDBApi.Close()
-
 	var wg sync.WaitGroup
 	for _, file := range flags.Files {
 		wg.Add(1)
