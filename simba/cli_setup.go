@@ -92,7 +92,7 @@ var simulateFlags = []cli.Flag{
 		Value:    "localhost",
 		Category: "Database",
 		Aliases: []string{
-			"h",
+			"H",
 		},
 	},
 	&cli.StringFlag{
@@ -159,7 +159,7 @@ var cleanFlags = []cli.Flag{
 		Value:    "localhost",
 		Category: "Database",
 		Aliases: []string{
-			"h",
+			"H",
 		},
 	},
 	&cli.StringFlag{
