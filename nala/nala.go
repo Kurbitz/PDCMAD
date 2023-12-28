@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,25 +22,36 @@ func triggerDetection(ctx *gin.Context) {
 }
 
 // Runs "testyp.py" and prints the output
-func pyCall() {
-	// FIX ME : we still need to create the inout data.csv file and read the output file
-	//Sets Arguments to the command
-	//Debug prints Stderr error
-	
-	cmd := exec.Command("python", "../anomaly_detection/outliers.py", "data.csv", "output.csv")
-	cmd.Stderr = os.Stderr
+func pythonSmokeTest() {
+
+	log.Println("Running python smoke test...")
+	cmd := exec.Command("python", "./testpy.py", "Python is working!")
+
 	//executes command, listends to stdout, puts w/e into "out" var unless error
 	out, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err) // Only gives exit 1 if error, use "cmd.Stderr = os.Stderr" (import os)
 	}
 	//Print, Need explicit typing or it prints an array with unicode numbers
-	fmt.Println(string(out))
+	log.Print(string(out))
+	log.Println("Python smoke test complete!")
 }
 
 func main() {
-	//pyCall()   :since the csv file doesn't exist yet
+	f, err := os.OpenFile("/var/log/nala.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	mw := io.MultiWriter(os.Stdout, f)
+
+	log.SetOutput(mw)
+
+	log.Println("Starting Nala...")
+	pythonSmokeTest()
+
 	router := gin.Default()
+
 	router.GET("/nala/trigger", triggerDetection)
-	router.Run("localhost:8088")
+	router.Run("0.0.0.0:8088")
 }
