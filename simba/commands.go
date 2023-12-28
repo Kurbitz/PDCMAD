@@ -26,17 +26,17 @@ func Fill(flags FillArgs) error {
 			id := GetIdFromFileName(filePath)
 			bar.Describe("Reading file " + filePath)
 			metric, _ := system_metrics.ReadFromFile(filePath, id)
-			bar.Add(1)
 			bar.Describe("Slicing metrics")
 
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
 			metric.SliceBetween(flags.StartAt, flags.Duration)
-
+			//uwu
 			progressChan := make(chan int)
 			defer close(progressChan)
 
 			bar.ChangeMax(bar.GetMax() + len(metric.Metrics))
+			bar.Add(1)
 
 			if len(flags.Anomaly) > 0 {
 				bar.Describe("Injecting anomaly")
