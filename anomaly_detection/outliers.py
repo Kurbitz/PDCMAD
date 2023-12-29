@@ -62,6 +62,9 @@ def sum_all_annomaly_in_outpuDF(input_df, anomalies_2D):
         if column not in ["timestamp", "server-up"]:
             df_anomaly[column] = anomalies_2D[anomaly_index]
             anomaly_index += 1
+        elif column == "server-up":
+            # If server-up is 2 then it is anomaly, so replacing it with 0
+            df_anomaly[column] = [0 if item == 2 else item for item in df_anomaly[column]]
 
     return df_anomaly
 
