@@ -36,6 +36,20 @@ func triggerDetection(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Algorithm field is empty")
 		return
 	}
+	message, err := dbapi.GetMetrics(host, duration)
+	if err != nil {
+		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
+		return
+
+	}
+	go func() {
+		if err := triggerIsolationForest(message, host); err != nil {
+			log.Printf("Anomaly detection failed with: %v\n", err)
+			return
+		}
+		log.Println("Anomaly detection is done!")
+	}()
+
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
 }
 
