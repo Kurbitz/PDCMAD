@@ -49,8 +49,13 @@ func triggerDetection(ctx *gin.Context) {
 	}
 
 	go func() {
-		if err := callable(detection); err != nil {
+		anomalies, err := callable(detection)
+		if err != nil {
 			log.Printf("Anomaly detection failed with: %v\n", err)
+			return
+		}
+		if err = logAnomalies("/tmp/anomalies.csv", anomalies); err != nil {
+			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
 		log.Println("Anomaly detection is done!")

@@ -17,7 +17,7 @@ type AnomalyDetection struct {
 	Data     system_metrics.SystemMetric
 }
 
-var supportedAlgorithms = map[string]func(ad *AnomalyDetection) error{
+var supportedAlgorithms = map[string]func(ad *AnomalyDetection) ([]system_metrics.Anomaly, error){
 	"IF": isolationForest,
 }
 
@@ -39,7 +39,7 @@ func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration st
 	}, nil
 }
 
-func isolationForest(ad *AnomalyDetection) error {
+func isolationForest(ad *AnomalyDetection) ([]system_metrics.Anomaly, error) {
 	inputFilePath := "/tmp/go_output.csv"
 	outputFilePath := "/tmp/py_output.csv"
 	//Sets Arguments to the command
@@ -50,9 +50,15 @@ func isolationForest(ad *AnomalyDetection) error {
 	//executes command without regards of output. If output is needed change to cmd.Output()
 	if err := cmd.Run(); err != nil {
 		log.Printf("Error when running anomaly detection script: %v", err)
-		return err
+		return []system_metrics.Anomaly{}, err
 	}
-	return nil
+	//TODO outputfile path is local to my machine, change to your own
+	anomalies, err := transformIFOutput("logs/dummyOutput.csv", ad.Data.Id)
+	if err != nil {
+		log.Printf("Error when transforming output: %v", err)
+		return []system_metrics.Anomaly{}, err
+	}
+	return anomalies, nil
 }
 
 /*
@@ -60,7 +66,7 @@ Reads from anomaly detection output file and transforms data to anomalym struct
 Returns Anomalystruct
 Returns error if something fails
 */
-func transformOutput(filename, host string) ([]system_metrics.Anomaly, error) {
+func transformIFOutput(filename, host string) ([]system_metrics.Anomaly, error) {
 	anomalyData := []AnomalyMetric{}
 	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
