@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"internal/influxdbapi"
 	"internal/system_metrics"
 	"io"
@@ -9,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"reflect"
 
 	"github.com/gocarina/gocsv"
 
@@ -42,15 +40,20 @@ func triggerDetection(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Anomaly detection is already in progress")
 		return
 	}
-	inProgress = true
-	message, err := dbapi.GetMetrics(host, duration)
-	if err != nil {
-		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
+	callable, exists := supportedAlgorithms[algorithm]
+	if !exists {
+		ctx.String(http.StatusOK, "Algorithm %v is not supported", algorithm)
 		return
-
 	}
+	inProgress = true
+	detection, err := NewAnomalyDetection(dbapi, host, duration)
+	if err != nil {
+		ctx.String(http.StatusOK, "%v", err)
+		return
+	}
+
 	go func() {
-		if err := triggerIsolationForest(message, host); err != nil {
+		if err := callable(detection); err != nil {
 			log.Printf("Anomaly detection failed with: %v\n", err)
 			return
 		}
@@ -90,65 +93,6 @@ func writeDataToFile(filePath string, data system_metrics.SystemMetric) error {
 		return err
 	}
 	return nil
-}
-
-// Runs "outliers.py" and wraps the output
-func triggerIsolationForest(data system_metrics.SystemMetric, host string) error {
-	if err := writeDataToFile("/tmp/go_output.csv", data); err != nil {
-		return err
-	}
-	inputFilePath := "/tmp/go_output.csv"
-	outputFilePath := "/tmp/py_output.csv"
-	//Sets Arguments to the command
-
-	cmd := exec.Command("python", "anomaly_detection/outliers.py", inputFilePath, outputFilePath)
-	//Better information in case of error in script execution
-	cmd.Stderr = os.Stderr
-	//executes command without regards of output. If output is needed change to cmd.Output()
-	if err := cmd.Run(); err != nil {
-		log.Printf("Error when running anomaly detection script: %v", err)
-		return err
-	}
-
-	anomalies, err := transformOutput("logs/dummyOutput.csv", host)
-
-	if err != nil {
-		return err
-	}
-	logAnomalies("/tmp/anomaly.csv", anomalies)
-	return nil
-}
-
-/*
-Reads from anomaly detection output file and transforms data to anomalym struct
-Returns Anomalystruct
-Returns error if something fails
-*/
-func transformOutput(filename, host string) ([]Anomaly, error) {
-	anomalyData := []AnomalyMetric{}
-	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		log.Printf("Error when opening file: %v", err)
-		return []Anomaly{}, err
-	}
-	defer inputFile.Close()
-	if err = gocsv.UnmarshalFile(inputFile, &anomalyData); err != nil {
-		log.Printf("Error when parsing anomaly detection csv: '%v'", err)
-		return []Anomaly{}, err
-	}
-	if len(anomalyData) == 0 {
-		return []Anomaly{}, fmt.Errorf("output of anomaly detection is empty")
-	}
-	outputArray := []Anomaly{}
-	for _, v := range anomalyData {
-		r := reflect.ValueOf(v)
-		for i := 1; i < r.NumField(); i++ {
-			if r.Field(i).Interface() == true {
-				outputArray = append(outputArray, Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
-			}
-		}
-	}
-	return outputArray, nil
 }
 
 /*
