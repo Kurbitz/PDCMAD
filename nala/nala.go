@@ -32,10 +32,6 @@ func triggerDetection(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Duration field is empty")
 		return
 	}
-	if algorithm == "" {
-		ctx.String(http.StatusOK, "Algorithm field is empty")
-		return
-	}
 	if inProgress {
 		ctx.String(http.StatusOK, "Anomaly detection is already in progress")
 		return
@@ -101,7 +97,7 @@ Logfile output: [time, host, metric, comment]
 Returns error if something fails
 */
 func logAnomalies(filePath string, data []Anomaly) error {
-	outputFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	outputFile, err := os.Create(filePath)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
