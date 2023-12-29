@@ -16,6 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var inProgress = false
+
 func triggerDetection(ctx *gin.Context) {
 	//TODO change to environment variables
 	dbapi := influxdbapi.NewInfluxDBApi("KBntTYJdaWbknRyM-CAw29iYdJmQkiK6C1vlEO3B5yuvgGJlmG4Gasps5rTRGflLq7bRSSWZSA_zdnYhpu-HXQ==", "localhost", "8086")
@@ -36,6 +38,11 @@ func triggerDetection(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Algorithm field is empty")
 		return
 	}
+	if inProgress {
+		ctx.String(http.StatusOK, "Anomaly detection is already in progress")
+		return
+	}
+	inProgress = true
 	message, err := dbapi.GetMetrics(host, duration)
 	if err != nil {
 		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
@@ -48,6 +55,7 @@ func triggerDetection(ctx *gin.Context) {
 			return
 		}
 		log.Println("Anomaly detection is done!")
+		inProgress = false
 	}()
 
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
