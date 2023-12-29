@@ -45,10 +45,15 @@ func triggerDetection(ctx *gin.Context) {
 	detection, err := NewAnomalyDetection(dbapi, host, duration)
 	if err != nil {
 		ctx.String(http.StatusOK, "%v", err)
+		inProgress = false
 		return
 	}
 
 	go func() {
+		defer func() {
+			inProgress = false
+		}()
+
 		anomalies, err := callable(detection)
 		if err != nil {
 			log.Printf("Anomaly detection failed with: %v\n", err)
@@ -59,7 +64,6 @@ func triggerDetection(ctx *gin.Context) {
 			return
 		}
 		log.Println("Anomaly detection is done!")
-		inProgress = false
 	}()
 
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
