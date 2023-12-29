@@ -159,5 +159,5 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/nala/:algorithm/:host/:duration", triggerDetection)
-	router.Run("localhost:8088")
+	router.Run("0.0.0.0:8088")
 }
