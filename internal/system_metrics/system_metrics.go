@@ -1,7 +1,7 @@
 package system_metrics
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"time"
 
@@ -71,13 +71,13 @@ func (m Metric) ToMap() map[string]interface{} {
 
 // SliceBetween returns a slice of metrics between the startAt time and the duration
 // If duration is 0, it will return all metrics after the startAt time
-func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
+func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) error {
 
 	startIndex := 0
 	endIndex := len(sm.Metrics)
 
 	if time.Duration(time.Duration.Seconds(duration+startAt)) > time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) {
-		log.Fatal("Duration exceeds length of the metric file")
+		return fmt.Errorf("Duration exceeds length of the metric file")
 	}
 	// Find the first metric that is after the startAt time
 	for i, m := range sm.Metrics {
@@ -90,7 +90,7 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 	lastTimestamp := time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) * time.Second
 	if duration == 0 || startAt+duration >= lastTimestamp {
 		sm.Metrics = sm.Metrics[startIndex:]
-		return
+		return nil
 	}
 
 	// Go from the startat time and duration forward
@@ -102,6 +102,8 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 	}
 
 	sm.Metrics = sm.Metrics[startIndex : startIndex+endIndex]
+
+	return nil
 }
 
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {

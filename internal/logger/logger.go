@@ -1,27 +1,30 @@
 package logger
 
 import (
+	"fmt"
+	"io"
 	"log/slog"
 	"os"
 )
 
-type Logger struct {
-	slog.Logger
-}
-
-func NewLogger() *slog.Logger {
-	file, err := os.Create("log.txt")
+func NewLogger() {
+	file, err := os.OpenFile("log.txt", os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		panic(err)
+		fmt.Errorf("Failed to open logfile")
+	}
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}
+	logger := slog.New(slog.NewTextHandler((io.MultiWriter(file, os.Stdout)), opts))
+	slog.SetDefault(logger)
+
+}
+func OutputError(printErr error) {
+	file, err := os.OpenFile("log.txt", os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Errorf("Failed to open logfile")
 	}
 	logger := slog.New(slog.NewTextHandler(file, nil))
-	return logger
-}
-
-func (log Logger) Info() {
-
-}
-
-func (log Logger) Warn() {
+	logger.Info(printErr.Error())
 
 }

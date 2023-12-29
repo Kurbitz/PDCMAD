@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"internal/system_metrics"
+	"log"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -62,7 +63,8 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 	//Basic handler for error, can catch and print them
 	go func() {
 		for err := range errChan {
-			fmt.Printf("write error on %s: %s\n", m.Id, err)
+			log.Printf("write error on %s: %s\n", m.Id, err)
+
 		}
 	}()
 

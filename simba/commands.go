@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"internal/influxdbapi"
-	"internal/logger"
 	"internal/system_metrics"
 	"log"
 	"sync"
@@ -13,28 +12,26 @@ import (
 func Fill(flags FillArgs) error {
 
 	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
-	var log = logger.NewLogger()
-	println(log)
 	defer influxDBApi.Close()
 	var wg sync.WaitGroup
-	for _, file := range flags.Files {
+	for i, file := range flags.Files {
 		wg.Add(1)
-		go func(filePath string) error {
+		go func(filePath string, routineID int) error {
 			defer wg.Done()
 
 			id := GetIdFromFileName(filePath)
 			metric, _ := system_metrics.ReadFromFile(filePath, id)
-
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
-			metric.SliceBetween(flags.StartAt, flags.Duration)
+			if err := metric.SliceBetween(flags.StartAt, flags.Duration); err != nil {
+				return err
+			}
 			if err := injectAnomaly(metric, flags.Anomaly); err != nil {
 				return err
 			}
-
 			influxDBApi.WriteMetrics(*metric, flags.Gap)
 			return nil
-		}(file)
+		}(file, i)
 
 	}
 	wg.Wait()
@@ -67,7 +64,9 @@ func Stream(flags StreamArgs) error {
 	if err != nil {
 		return err
 	}
-	metrics.SliceBetween(flags.Startat, flags.Duration)
+	if err := metrics.SliceBetween(flags.Startat, flags.Duration); err != nil {
+		return err
+	}
 	if err := injectAnomaly(metrics, flags.Anomaly); err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"internal/logger"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -379,9 +380,13 @@ func invokeStream(ctx *cli.Context) error {
 	// Parse the flags
 	flags, err := ParseStreamFlags(ctx)
 	if err != nil {
+		logger.OutputError(err)
+		//log.Println(err)
 		return cli.Exit(err, 1)
 	}
 	if err := Stream(*flags); err != nil {
+		logger.OutputError(err)
+		//log.Println(err)
 		return cli.Exit(err, 1)
 	}
 
@@ -394,9 +399,11 @@ func invokeFill(ctx *cli.Context) error {
 	// Parse the flags
 	flags, err := ParseFillFlags(ctx)
 	if err != nil {
+		logger.OutputError(err)
 		return cli.Exit(err, 1)
 	}
 	if err := Fill(*flags); err != nil {
+		logger.OutputError(err)
 		return cli.Exit(err, 1)
 	}
 	return nil
@@ -406,9 +413,11 @@ func invokeClean(ctx *cli.Context) error {
 	//Parse the flags
 	flags, err := ParseCleanFlags(ctx)
 	if err != nil {
+		logger.OutputError(err)
 		return cli.Exit(err, 1)
 	}
 	if err := Clean(*flags); err != nil {
+		logger.OutputError(err)
 		return cli.Exit(err, 1)
 	}
 	return nil
