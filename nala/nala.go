@@ -20,6 +20,7 @@ func triggerDetection(ctx *gin.Context) {
 	//TODO change to environment variables
 	dbapi := influxdbapi.NewInfluxDBApi("KBntTYJdaWbknRyM-CAw29iYdJmQkiK6C1vlEO3B5yuvgGJlmG4Gasps5rTRGflLq7bRSSWZSA_zdnYhpu-HXQ==", "localhost", "8086")
 	defer dbapi.Close()
+	algorithm := ctx.Param("algorithm")
 	host := ctx.Param("host")
 	duration := ctx.Param("duration")
 	//These checks might be in simba instead?
@@ -31,16 +32,8 @@ func triggerDetection(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Duration field is empty")
 		return
 	}
-	if message, err := dbapi.GetMetrics(host, duration); err == nil {
-		go func() {
-			if err := triggerIsolationForest(message, host); err != nil {
-				log.Printf("Anomaly detection failed with: %v\n", err)
-				return
-			}
-			log.Println("Anomaly detection is done!")
-		}()
-	} else {
-		ctx.String(http.StatusOK, "Error while getting metrics:\n%v", err)
+	if algorithm == "" {
+		ctx.String(http.StatusOK, "Algorithm field is empty")
 		return
 	}
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
@@ -211,6 +204,6 @@ func main() {
 
 	router := gin.Default()
 
-	router.GET("/nala/IF/:host/:duration", triggerDetection)
+	router.GET("/nala/:algorithm/:host/:duration", triggerDetection)
 	router.Run("localhost:8088")
 }
