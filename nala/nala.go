@@ -16,10 +16,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	PATH = "../anomaly_detection/"
-)
-
 func triggerDetection(ctx *gin.Context) {
 	//TODO change to environment variables
 	dbapi := influxdbapi.NewInfluxDBApi("KBntTYJdaWbknRyM-CAw29iYdJmQkiK6C1vlEO3B5yuvgGJlmG4Gasps5rTRGflLq7bRSSWZSA_zdnYhpu-HXQ==", "localhost", "8086")
@@ -37,7 +33,7 @@ func triggerDetection(ctx *gin.Context) {
 	}
 	if message, err := dbapi.GetMetrics(host, duration); err == nil {
 		go func() {
-			if err := triggerIsolationForest("outliers.py", message, host); err != nil {
+			if err := triggerIsolationForest(message, host); err != nil {
 				log.Printf("Anomaly detection failed with: %v\n", err)
 				return
 			}
@@ -82,16 +78,15 @@ func writeDataToFile(filePath string, data system_metrics.SystemMetric) error {
 }
 
 // Runs "outliers.py" and wraps the output
-func triggerIsolationForest(filename string, data system_metrics.SystemMetric, host string) error {
-	if err := writeDataToFile("logs/go_output.csv", data); err != nil {
+func triggerIsolationForest(data system_metrics.SystemMetric, host string) error {
+	if err := writeDataToFile("/tmp/go_output.csv", data); err != nil {
 		return err
 	}
-	fullPath := PATH + filename
-	inputFilePath := "../nala/logs/go_output.csv"
-	outputFilePath := "../nala/logs/py_output.csv"
+	inputFilePath := "/tmp/go_output.csv"
+	outputFilePath := "/tmp/py_output.csv"
 	//Sets Arguments to the command
 
-	cmd := exec.Command("python", fullPath, inputFilePath, outputFilePath)
+	cmd := exec.Command("python", "anomaly_detection/outliers.py", inputFilePath, outputFilePath)
 	//Better information in case of error in script execution
 	cmd.Stderr = os.Stderr
 	//executes command without regards of output. If output is needed change to cmd.Output()
@@ -100,7 +95,7 @@ func triggerIsolationForest(filename string, data system_metrics.SystemMetric, h
 		return err
 	}
 
-	anomalies, err := transformOutput("logs/dummyOutput.csv")
+	anomalies, err := transformOutput("dummyOutput.csv")
 
 	if err != nil {
 		return err
@@ -127,7 +122,7 @@ func transformOutput(filename string) ([]AnomalyMetric, error) {
 		return []AnomalyMetric{}, err
 	}
 	if len(anomalyData) == 0 {
-		return []AnomalyMetric{}, fmt.Errorf("Output of anomaly detection is empty")
+		return []AnomalyMetric{}, fmt.Errorf("output of anomaly detection is empty")
 	}
 	return anomalyData, nil
 }
@@ -165,7 +160,6 @@ func logAnomalies(anomalies []AnomalyMetric, host string) {
 	}
 	//TODO write output data to database
 	writeAnomaliesToFile("logs/anomalies.csv", outputArray)
-	return
 }
 
 type Anomaly struct {
