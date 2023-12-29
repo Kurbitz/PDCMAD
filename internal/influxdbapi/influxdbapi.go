@@ -15,7 +15,7 @@ import (
 const (
 	ORG         = "pdc-mad"
 	BUCKET      = "pdc-mad"
-	MEASUREMENT = "test"
+	MEASUREMENT = "metrics"
 )
 
 type InfluxDBApi struct {
