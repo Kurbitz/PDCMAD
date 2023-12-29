@@ -59,7 +59,7 @@ func isolationForest(ad *AnomalyDetection) ([]system_metrics.Anomaly, error) {
 		return []system_metrics.Anomaly{}, err
 	}
 	//TODO outputfile path is local to my machine, change to your own
-	anomalies, err := transformIFOutput("logs/dummyOutput.csv", ad.Data.Id)
+	anomalies, err := transformIFOutput(outputFilePath, ad.Data.Id)
 	if err != nil {
 		log.Printf("Error when transforming output: %v", err)
 		return []system_metrics.Anomaly{}, err
