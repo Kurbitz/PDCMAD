@@ -159,5 +159,10 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/nala/:algorithm/:host/:duration", triggerDetection)
+
+	router.GET("/nala/test", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "Nala is working!")
+	})
+
 	router.Run("0.0.0.0:8088")
 }
