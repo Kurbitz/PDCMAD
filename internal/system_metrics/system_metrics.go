@@ -40,6 +40,13 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up" json:"server-up"`
 }
 
+type Anomaly struct {
+	Timestamp int64  `csv:"timestamp" json:"timestamp"`
+	Host      string `csv:"host" json:"host"`
+	Metric    string `csv:"metric" json:"metric"`
+	Comment   string `csv:"comment" json:"comment"`
+}
+
 func (m Metric) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp":               m.Timestamp,

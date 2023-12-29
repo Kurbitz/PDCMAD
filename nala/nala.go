@@ -96,7 +96,7 @@ Takes AnomalyMetric struct and writes it to a log file
 Logfile output: [time, host, metric, comment]
 Returns error if something fails
 */
-func logAnomalies(filePath string, data []Anomaly) error {
+func logAnomalies(filePath string, data []system_metrics.Anomaly) error {
 	outputFile, err := os.Create(filePath)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
@@ -109,13 +109,6 @@ func logAnomalies(filePath string, data []Anomaly) error {
 		return err
 	}
 	return nil
-}
-
-type Anomaly struct {
-	Timestamp int64  `csv:"timestamp" json:"timestamp"`
-	Host      string `csv:"host" json:"host"`
-	Metric    string `csv:"metric" json:"metric"`
-	Comment   string `csv:"comment" json:"comment"`
 }
 
 type AnomalyMetric struct {
