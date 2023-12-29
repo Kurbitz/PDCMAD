@@ -18,7 +18,7 @@ var inProgress = false
 
 func triggerDetection(ctx *gin.Context) {
 	//TODO change to environment variables
-	dbapi := influxdbapi.NewInfluxDBApi("KBntTYJdaWbknRyM-CAw29iYdJmQkiK6C1vlEO3B5yuvgGJlmG4Gasps5rTRGflLq7bRSSWZSA_zdnYhpu-HXQ==", "localhost", "8086")
+	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"))
 	defer dbapi.Close()
 	algorithm := ctx.Param("algorithm")
 	host := ctx.Param("host")
@@ -143,6 +143,21 @@ type AnomalyMetric struct {
 	Server_Up               bool  `csv:"server-up" json:"server-up"`
 }
 
+func checkEnv() {
+	log.Println("Checking environment variables...")
+
+	if _, exists := os.LookupEnv("INFLUXDB_HOST"); !exists {
+		log.Fatal("INFLUXDB_HOST is not set")
+	}
+	if _, exists := os.LookupEnv("INFLUXDB_PORT"); !exists {
+		log.Fatal("INFLUXDB_PORT is not set")
+	}
+	if _, exists := os.LookupEnv("INFLUXDB_TOKEN"); !exists {
+		log.Fatal("INFLUXDB_TOKEN is not set")
+	}
+	log.Println("Environment variables are set!")
+}
+
 func main() {
 	f, err := os.OpenFile("/var/log/nala.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -155,6 +170,7 @@ func main() {
 
 	log.Println("Starting Nala...")
 	pythonSmokeTest()
+	checkEnv()
 
 	router := gin.Default()
 
