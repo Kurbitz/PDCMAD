@@ -110,41 +110,54 @@ func triggerIsolationForest(data system_metrics.SystemMetric, host string) error
 		return err
 	}
 
-	anomalies, err := transformOutput("dummyOutput.csv")
+	anomalies, err := transformOutput("logs/dummyOutput.csv", host)
 
 	if err != nil {
 		return err
 	}
-	logAnomalies(anomalies, host)
+	logAnomalies("/tmp/anomaly.csv", anomalies)
 	return nil
 }
 
 /*
-Reads from anomaly detection output file and transforms data to anomalymetric struct
-Returns AnomalyMetric struct
+Reads from anomaly detection output file and transforms data to anomalym struct
+Returns Anomalystruct
 Returns error if something fails
 */
-func transformOutput(filename string) ([]AnomalyMetric, error) {
+func transformOutput(filename, host string) ([]Anomaly, error) {
 	anomalyData := []AnomalyMetric{}
 	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		log.Printf("Error when opening file: %v", err)
-		return []AnomalyMetric{}, err
+		return []Anomaly{}, err
 	}
 	defer inputFile.Close()
 	if err = gocsv.UnmarshalFile(inputFile, &anomalyData); err != nil {
 		log.Printf("Error when parsing anomaly detection csv: '%v'", err)
-		return []AnomalyMetric{}, err
+		return []Anomaly{}, err
 	}
 	if len(anomalyData) == 0 {
-		return []AnomalyMetric{}, fmt.Errorf("output of anomaly detection is empty")
+		return []Anomaly{}, fmt.Errorf("output of anomaly detection is empty")
 	}
-	return anomalyData, nil
+	outputArray := []Anomaly{}
+	for _, v := range anomalyData {
+		r := reflect.ValueOf(v)
+		for i := 1; i < r.NumField(); i++ {
+			if r.Field(i).Interface() == true {
+				outputArray = append(outputArray, Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
+			}
+		}
+	}
+	return outputArray, nil
 }
 
-// This should not be a separate function and use an interface between systemmetric and anomaly
-func writeAnomaliesToFile(filePath string, data []Anomaly) error {
-	outputFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
+/*
+Takes AnomalyMetric struct and writes it to a log file
+Logfile output: [time, host, metric, comment]
+Returns error if something fails
+*/
+func logAnomalies(filePath string, data []Anomaly) error {
+	outputFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
@@ -156,25 +169,6 @@ func writeAnomaliesToFile(filePath string, data []Anomaly) error {
 		return err
 	}
 	return nil
-}
-
-/*
-Takes AnomalyMetric struct and writes it to a log file
-Logfile output: [time, host, metric, comment]
-Returns error if something fails
-*/
-func logAnomalies(anomalies []AnomalyMetric, host string) {
-	outputArray := []Anomaly{}
-	for _, v := range anomalies {
-		r := reflect.ValueOf(v)
-		for i := 1; i < r.NumField(); i++ {
-			if r.Field(i).Interface() == true {
-				outputArray = append(outputArray, Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
-			}
-		}
-	}
-	//TODO write output data to database
-	writeAnomaliesToFile("logs/anomalies.csv", outputArray)
 }
 
 type Anomaly struct {
