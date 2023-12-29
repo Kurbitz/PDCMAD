@@ -85,21 +85,6 @@ func pythonSmokeTest() {
 	log.Println("Python smoke test complete!")
 }
 
-func writeDataToFile(filePath string, data system_metrics.SystemMetric) error {
-	outputFile, err := os.Create(filePath)
-	if err != nil {
-		log.Printf("Error when creating file: %v", err)
-		return err
-	}
-	defer outputFile.Close()
-	err = gocsv.MarshalFile(&data.Metrics, outputFile)
-	if err != nil {
-		log.Printf("Error while parsing metrics from file: %v", err)
-		return err
-	}
-	return nil
-}
-
 /*
 Takes AnomalyMetric struct and writes it to a log file
 Logfile output: [time, host, metric, comment]
@@ -118,33 +103,6 @@ func logAnomalies(filePath string, data []system_metrics.Anomaly) error {
 		return err
 	}
 	return nil
-}
-
-type AnomalyMetric struct {
-	Timestamp               int64 `csv:"timestamp" json:"timestamp"`
-	Load1m                  bool  `csv:"load-1m" json:"load-1m"`
-	Load5m                  bool  `csv:"load-5m" json:"load-5m"`
-	Load15m                 bool  `csv:"load-15m" json:"load-15m"`
-	Sys_Mem_Swap_Total      bool  `csv:"sys-mem-swap-total" json:"sys-mem-swap-total"`
-	Sys_Mem_Swap_Free       bool  `csv:"sys-mem-swap-free" json:"sys-mem-swap-free"`
-	Sys_Mem_Free            bool  `csv:"sys-mem-free" json:"sys-mem-free"`
-	Sys_Mem_Cache           bool  `csv:"sys-mem-cache" json:"sys-mem-cache"`
-	Sys_Mem_Buffered        bool  `csv:"sys-mem-buffered" json:"sys-mem-buffered"`
-	Sys_Mem_Available       bool  `csv:"sys-mem-available" json:"sys-mem-available"`
-	Sys_Mem_Total           bool  `csv:"sys-mem-total" json:"sys-mem-total"`
-	Sys_Fork_Rate           bool  `csv:"sys-fork-rate" json:"sys-fork-rate"`
-	Sys_Interrupt_Rate      bool  `csv:"sys-interrupt-rate" json:"sys-interrupt-rate"`
-	Sys_Context_Switch_Rate bool  `csv:"sys-context-switch-rate" json:"sys-context-switch-rate"`
-	Sys_Thermal             bool  `csv:"sys-thermal" json:"sys-thermal"`
-	Disk_Io_Time            bool  `csv:"disk-io-time" json:"disk-io-time"`
-	Disk_Bytes_Read         bool  `csv:"disk-bytes-read" json:"disk-bytes-read"`
-	Disk_Bytes_Written      bool  `csv:"disk-bytes-written" json:"disk-bytes-written"`
-	Disk_Io_Read            bool  `csv:"disk-io-read" json:"disk-io-read"`
-	Disk_Io_Write           bool  `csv:"disk-io-write" json:"disk-io-write"`
-	Cpu_Io_Wait             bool  `csv:"cpu-iowait" json:"cpu-iowait"`
-	Cpu_System              bool  `csv:"cpu-system" json:"cpu-system"`
-	Cpu_User                bool  `csv:"cpu-user" json:"cpu-user"`
-	Server_Up               bool  `csv:"server-up" json:"server-up"`
 }
 
 func checkEnv() {
