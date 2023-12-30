@@ -69,38 +69,6 @@ def sum_all_annomaly_in_outpuDF(input_df, anomalies_2D):
     return df_anomaly
 
 
-# def apply_PCA(df, keep_var=0.95):  # Keep 95% of variance
-#     # Scaling the data to make it more normally distributed before applying PCA
-#     scaler = StandardScaler()
-#     df_scaled = scaler.fit_transform(df)
-
-#     # Applying PCA
-#     pca_model = PCA(n_components=keep_var)
-#     df_pca = pca_model.fit_transform(df_scaled)
-
-#     return df_pca, pca_model
-
-
-# def apply_IF(df_pca, df, no_of_tree=1000, perchentage_of_outlier=0.01):
-#     iso_forest = IsolationForest(
-#         n_estimators=no_of_tree, contamination=perchentage_of_outlier
-#     )
-
-#     # Prediction
-#     anomalies = iso_forest.fit_predict(df_pca)
-#     anomaly_indices = np.where(anomalies == -1)[0]
-
-#     # output dataframe with anomaly indices(log file)
-#     df_anomaly = df.copy()
-#     df_anomaly["outliers"] = "no"
-#     df_anomaly.loc[df_anomaly.index[anomaly_indices], "outliers"] = "yes"
-
-#     # # output dataframe with anomaly indices(log file)
-#     # df_anomalies = df.iloc[anomaly_indices]
-
-#     return df_anomaly
-
-
 def main(args):
     try:
         csv_input_path = args[1]
