@@ -196,7 +196,7 @@ func (api InfluxDBApi) WriteMetric(m system_metrics.Metric, id string, timeStamp
 func (api InfluxDBApi) WriteAnomalies(anomalies []system_metrics.Anomaly) error {
 	writeAPI := api.WriteAPI(api.Org, api.Bucket)
 	for _, a := range anomalies {
-		p := influxdb2.NewPoint("anomalies", map[string]string{"host": a.Host}, a.ToMap(), time.Unix(a.Timestamp, 0))
+		p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": a.Host}, a.ToMap(), time.Unix(a.Timestamp, 0))
 		writeAPI.WritePoint(p)
 	}
 	writeAPI.Flush()

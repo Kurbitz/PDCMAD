@@ -18,7 +18,7 @@ var inProgress = false
 
 func triggerDetection(ctx *gin.Context) {
 	//TODO change to environment variables
-	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"))
+	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "anomalies")
 	defer dbapi.Close()
 	algorithm := ctx.Param("algorithm")
 	host := ctx.Param("host")
@@ -119,6 +119,12 @@ func checkEnv() {
 		log.Fatal("INFLUXDB_PORT is not set")
 	}
 	if _, exists := os.LookupEnv("INFLUXDB_TOKEN"); !exists {
+		log.Fatal("INFLUXDB_TOKEN is not set")
+	}
+	if _, exists := os.LookupEnv("INFLUXDB_ORG"); !exists {
+		log.Fatal("INFLUXDB_TOKEN is not set")
+	}
+	if _, exists := os.LookupEnv("INFLUXDB_BUCKET"); !exists {
 		log.Fatal("INFLUXDB_TOKEN is not set")
 	}
 	log.Println("Environment variables are set!")
