@@ -90,7 +90,7 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) error {
 	lastTimestamp := time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) * time.Second
 	if duration == 0 || startAt+duration >= lastTimestamp {
 		sm.Metrics = sm.Metrics[startIndex:]
-		return nil
+
 	}
 
 	// Go from the startat time and duration forward

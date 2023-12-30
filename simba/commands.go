@@ -14,24 +14,29 @@ func Fill(flags FillArgs) error {
 	var influxDBApi = influxdbapi.NewInfluxDBApi(flags.DBToken, flags.DBIp, flags.DBPort)
 	defer influxDBApi.Close()
 	var wg sync.WaitGroup
-	for i, file := range flags.Files {
+	for _, file := range flags.Files {
 		wg.Add(1)
-		go func(filePath string, routineID int) error {
+		go func(filePath string) error {
 			defer wg.Done()
 
 			id := GetIdFromFileName(filePath)
-			metric, _ := system_metrics.ReadFromFile(filePath, id)
+			metric, err := system_metrics.ReadFromFile(filePath, id)
+			if err != nil {
+				return err
+			}
 			// Slice the metric between startAt and duration
 			// If the parameters are 0, it will return all metrics, so we don't need to check for that
+			//!FIX there is a bug here where the "Duration exceeds length of metrics file" error doesnt return. I have 0 idea why.
 			if err := metric.SliceBetween(flags.StartAt, flags.Duration); err != nil {
 				return err
 			}
+
 			if err := injectAnomaly(metric, flags.Anomaly); err != nil {
 				return err
 			}
 			influxDBApi.WriteMetrics(*metric, flags.Gap)
 			return nil
-		}(file, i)
+		}(file)
 
 	}
 	wg.Wait()
@@ -67,6 +72,7 @@ func Stream(flags StreamArgs) error {
 	if err := metrics.SliceBetween(flags.Startat, flags.Duration); err != nil {
 		return err
 	}
+
 	if err := injectAnomaly(metrics, flags.Anomaly); err != nil {
 		return err
 	}

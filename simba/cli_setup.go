@@ -380,13 +380,12 @@ func invokeStream(ctx *cli.Context) error {
 	// Parse the flags
 	flags, err := ParseStreamFlags(ctx)
 	if err != nil {
+		//Output errors to logfile
 		logger.OutputError(err)
-		//log.Println(err)
 		return cli.Exit(err, 1)
 	}
 	if err := Stream(*flags); err != nil {
 		logger.OutputError(err)
-		//log.Println(err)
 		return cli.Exit(err, 1)
 	}
 
