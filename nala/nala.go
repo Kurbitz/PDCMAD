@@ -63,6 +63,10 @@ func triggerDetection(ctx *gin.Context) {
 			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
+		if err = dbapi.WriteAnomalies(anomalies); err != nil {
+			log.Printf("Error when writing anomalies to influxdb: %v\n", err)
+			return
+		}
 		log.Println("Anomaly detection is done!")
 	}()
 

@@ -47,6 +47,15 @@ type Anomaly struct {
 	Comment   string `csv:"comment" json:"comment"`
 }
 
+func (a Anomaly) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"timestamp": a.Timestamp,
+		"host":      a.Host,
+		"metric":    a.Metric,
+		"comment":   a.Comment,
+	}
+}
+
 func (m Metric) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp":               m.Timestamp,
