@@ -11,12 +11,12 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
-type AnomalyDetection struct {
+type AnomalyDetectionParameters struct {
 	Duration string
 	Data     system_metrics.SystemMetric
 }
 
-var supportedAlgorithms = map[string]func(ad *AnomalyDetection) (*[]system_metrics.AnomalyDetectionOutput, error){
+var supportedAlgorithms = map[string]func(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error){
 	"IF": isolationForest,
 }
 
@@ -25,6 +25,7 @@ func CheckSupportedAlgorithm(algorithm string) bool {
 	return ok
 }
 
+func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration string) (*AnomalyDetectionParameters, error) {
 	log.Println("Getting metrics from influxdb")
 	data, err := dbapi.GetMetrics(host, duration)
 	if err != nil {
@@ -32,12 +33,13 @@ func CheckSupportedAlgorithm(algorithm string) bool {
 		return nil, err
 	}
 	log.Println("Metrics received from influxdb")
-	return &AnomalyDetection{
+	return &AnomalyDetectionParameters{
 		Duration: duration,
 		Data:     data,
 	}, nil
 }
 
+func isolationForest(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error) {
 	log.Println("Starting anomaly detection with Isolation Forest")
 
 	//Sets Arguments to the command

@@ -39,7 +39,7 @@ func triggerDetection(ctx *gin.Context) {
 		log.Println("Anomaly detection is already in progress")
 		return
 	}
-	callable, exists := supportedAlgorithms[algorithm]
+	detection, exists := supportedAlgorithms[algorithm]
 	if !exists {
 		ctx.String(http.StatusOK, "Algorithm %v is not supported", algorithm)
 		log.Printf("Algorithm %v is not supported", algorithm)
@@ -48,6 +48,7 @@ func triggerDetection(ctx *gin.Context) {
 	inProgress = true
 
 	log.Printf("Starting anomaly detection for %v\n", host)
+	parameters, err := NewAnomalyDetection(dbapi, host, duration)
 	if err != nil {
 		ctx.String(http.StatusOK, "%v", err)
 		inProgress = false
@@ -59,7 +60,7 @@ func triggerDetection(ctx *gin.Context) {
 			inProgress = false
 		}()
 
-		anomalies, err := callable(detection)
+		anomalies, err := detection(parameters)
 		if err != nil {
 			log.Printf("Anomaly detection failed with: %v\n", err)
 			return
