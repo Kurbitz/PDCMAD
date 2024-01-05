@@ -18,8 +18,7 @@ import (
 var inProgress = false
 
 func triggerDetection(ctx *gin.Context) {
-	//TODO change to environment variables
-	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "anomalies")
+	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "metrics")
 	defer dbapi.Close()
 	algorithm := ctx.Param("algorithm")
 	host := ctx.Param("host")
@@ -64,6 +63,7 @@ func triggerDetection(ctx *gin.Context) {
 			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
+		dbapi.Measurement = "anomalies"
 		if err = dbapi.WriteAnomalies(*anomalies, host); err != nil {
 			log.Printf("Error when writing anomalies to influxdb: %v\n", err)
 			return
