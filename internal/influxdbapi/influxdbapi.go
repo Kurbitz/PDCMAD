@@ -122,6 +122,12 @@ func (api InfluxDBApi) GetMetrics(host, duration string) (system_metrics.SystemM
 		log.Printf("Error when decoding json to struct: %v\n", err)
 		return system_metrics.SystemMetric{}, err
 	}
+
+	if len(parsedMetrics) == 0 {
+		log.Printf("No metrics found for host '%s' in bucket '%s'\n", host, api.Bucket)
+		return system_metrics.SystemMetric{}, fmt.Errorf("No metrics found for host '%s' in bucket '%s'", host, api.Bucket)
+	}
+
 	return system_metrics.SystemMetric{Id: host, Metrics: parsedMetrics}, nil
 }
 
