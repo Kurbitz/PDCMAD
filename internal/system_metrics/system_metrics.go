@@ -40,6 +40,49 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up" json:"server-up"`
 }
 
+type AnomalyEvent struct {
+	Timestamp int64  `csv:"timestamp"`
+	Host      string `csv:"host"`
+	Metric    string `csv:"metric"`
+	Comment   string `csv:"comment"`
+}
+
+type AnomalyDetectionOutput struct {
+	Timestamp               int64 `csv:"timestamp"`
+	Load1m                  bool  `csv:"load-1m"`
+	Load5m                  bool  `csv:"load-5m"`
+	Load15m                 bool  `csv:"load-15m"`
+	Sys_Mem_Swap_Total      bool  `csv:"sys-mem-swap-total"`
+	Sys_Mem_Swap_Free       bool  `csv:"sys-mem-swap-free"`
+	Sys_Mem_Free            bool  `csv:"sys-mem-free"`
+	Sys_Mem_Cache           bool  `csv:"sys-mem-cache"`
+	Sys_Mem_Buffered        bool  `csv:"sys-mem-buffered"`
+	Sys_Mem_Available       bool  `csv:"sys-mem-available"`
+	Sys_Mem_Total           bool  `csv:"sys-mem-total"`
+	Sys_Fork_Rate           bool  `csv:"sys-fork-rate"`
+	Sys_Interrupt_Rate      bool  `csv:"sys-interrupt-rate"`
+	Sys_Context_Switch_Rate bool  `csv:"sys-context-switch-rate"`
+	Sys_Thermal             bool  `csv:"sys-thermal"`
+	Disk_Io_Time            bool  `csv:"disk-io-time"`
+	Disk_Bytes_Read         bool  `csv:"disk-bytes-read"`
+	Disk_Bytes_Written      bool  `csv:"disk-bytes-written"`
+	Disk_Io_Read            bool  `csv:"disk-io-read"`
+	Disk_Io_Write           bool  `csv:"disk-io-write"`
+	Cpu_Io_Wait             bool  `csv:"cpu-iowait"`
+	Cpu_System              bool  `csv:"cpu-system"`
+	Cpu_User                bool  `csv:"cpu-user"`
+	Server_Up               bool  `csv:"server-up"`
+}
+
+func (a AnomalyEvent) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"timestamp": a.Timestamp,
+		"host":      a.Host,
+		"metric":    a.Metric,
+		"comment":   a.Comment,
+	}
+}
+
 func (m Metric) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp":               m.Timestamp,
@@ -66,6 +109,35 @@ func (m Metric) ToMap() map[string]interface{} {
 		"cpu-system":              m.Cpu_System,
 		"cpu-user":                m.Cpu_User,
 		"server-up":               m.Server_Up,
+	}
+}
+
+func (am AnomalyDetectionOutput) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"timestamp":               am.Timestamp,
+		"load-1m":                 am.Load1m,
+		"load-5m":                 am.Load5m,
+		"load-15m":                am.Load15m,
+		"sys-mem-swap-total":      am.Sys_Mem_Swap_Total,
+		"sys-mem-swap-free":       am.Sys_Mem_Swap_Free,
+		"sys-mem-free":            am.Sys_Mem_Free,
+		"sys-mem-cache":           am.Sys_Mem_Cache,
+		"sys-mem-buffered":        am.Sys_Mem_Buffered,
+		"sys-mem-available":       am.Sys_Mem_Available,
+		"sys-mem-total":           am.Sys_Mem_Total,
+		"sys-fork-rate":           am.Sys_Fork_Rate,
+		"sys-interrupt-rate":      am.Sys_Interrupt_Rate,
+		"sys-context-switch-rate": am.Sys_Context_Switch_Rate,
+		"sys-thermal":             am.Sys_Thermal,
+		"disk-io-time":            am.Disk_Io_Time,
+		"disk-bytes-read":         am.Disk_Bytes_Read,
+		"disk-bytes-written":      am.Disk_Bytes_Written,
+		"disk-io-read":            am.Disk_Io_Read,
+		"disk-io-write":           am.Disk_Io_Write,
+		"cpu-iowait":              am.Cpu_Io_Wait,
+		"cpu-system":              am.Cpu_System,
+		"cpu-user":                am.Cpu_User,
+		"server-up":               am.Server_Up,
 	}
 }
 
