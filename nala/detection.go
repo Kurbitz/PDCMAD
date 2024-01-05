@@ -42,6 +42,8 @@ func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration st
 func isolationForest(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error) {
 	log.Println("Starting anomaly detection with Isolation Forest")
 
+	inputFilePath := "go_output.csv"
+	outputFilePath := "py_output.csv"
 	//Sets Arguments to the command
 
 	log.Println("Writing data to file")
