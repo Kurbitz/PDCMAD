@@ -3,7 +3,6 @@ package main
 import (
 	"internal/influxdbapi"
 	"internal/system_metrics"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -142,15 +141,6 @@ func checkEnv() {
 }
 
 func main() {
-	f, err := os.OpenFile("/var/log/nala.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	mw := io.MultiWriter(os.Stdout, f)
-
-	log.SetOutput(mw)
-
 	log.Println("Starting Nala...")
 	pythonSmokeTest()
 	checkEnv()
