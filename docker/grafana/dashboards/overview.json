@@ -573,7 +573,7 @@
                     "tags": []
                 }
             ],
-            "title": "Anomalies on $Field across systems",
+            "title": "$Algorithm: Anomalies on $Field across systems",
             "transformations": [
                 {
                     "id": "filterFieldsByName",
