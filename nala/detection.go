@@ -20,11 +20,6 @@ var supportedAlgorithms = map[string]func(ad *AnomalyDetectionParameters) (*[]sy
 	"IF": isolationForest,
 }
 
-func CheckSupportedAlgorithm(algorithm string) bool {
-	_, ok := supportedAlgorithms[algorithm]
-	return ok
-}
-
 func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration string) (*AnomalyDetectionParameters, error) {
 	log.Println("Getting metrics from influxdb")
 	data, err := dbapi.GetMetrics(host, duration)
