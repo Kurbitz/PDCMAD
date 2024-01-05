@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"reflect"
 
 	"github.com/gocarina/gocsv"
 
@@ -59,11 +60,11 @@ func triggerDetection(ctx *gin.Context) {
 			log.Printf("Anomaly detection failed with: %v\n", err)
 			return
 		}
-		if err = logAnomalies("/tmp/anomalies.csv", anomalies); err != nil {
+		if err = logAnomalies("/tmp/anomalies.csv", host, *anomalies); err != nil {
 			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
-		if err = dbapi.WriteAnomalies(anomalies); err != nil {
+		if err = dbapi.WriteAnomalies(*anomalies, host); err != nil {
 			log.Printf("Error when writing anomalies to influxdb: %v\n", err)
 			return
 		}
@@ -94,14 +95,24 @@ Takes AnomalyMetric struct and writes it to a log file
 Logfile output: [time, host, metric, comment]
 Returns error if something fails
 */
-func logAnomalies(filePath string, data []system_metrics.Anomaly) error {
+func logAnomalies(filePath string, host string, data []system_metrics.AnomalyMetric) error {
+	outputArray := []system_metrics.Anomaly{}
+	for _, v := range data {
+		r := reflect.ValueOf(v)
+		for i := 1; i < r.NumField(); i++ {
+			if r.Field(i).Interface() == true {
+				outputArray = append(outputArray, system_metrics.Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
+			}
+		}
+	}
+
 	outputFile, err := os.Create(filePath)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
 	}
 	defer outputFile.Close()
-	err = gocsv.MarshalFile(&data, outputFile)
+	err = gocsv.MarshalFile(&outputArray, outputFile)
 	if err != nil {
 		log.Printf("Error while parsing metrics from file: %v", err)
 		return err
