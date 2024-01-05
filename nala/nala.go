@@ -163,5 +163,15 @@ func main() {
 		ctx.String(http.StatusOK, "Nala is working!")
 	})
 
+	router.GET("/nala/status", func(ctx *gin.Context) {
+		responseText := ""
+		if inProgress {
+			responseText = "Anomaly detection in progress"
+		} else {
+			responseText = "No anomaly detection running"
+		}
+		ctx.String(http.StatusOK, responseText)
+	})
+
 	router.Run("0.0.0.0:8088")
 }
