@@ -18,7 +18,6 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 2,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -196,6 +195,12 @@
                             "key": "host::tag",
                             "operator": "=~",
                             "value": "/^$System$/"
+                        },
+                        {
+                            "condition": "AND",
+                            "key": "algorithm::tag",
+                            "operator": "=~",
+                            "value": "/^$Algorithm$/"
                         }
                     ]
                 },
@@ -402,7 +407,7 @@
                     "showLegend": true
                 },
                 "mergeValues": true,
-                "rowHeight": 0.94,
+                "rowHeight": 0.93,
                 "showValue": "auto",
                 "tooltip": {
                     "mode": "single",
@@ -419,7 +424,7 @@
                     "measurement": "anomalies",
                     "orderByTime": "ASC",
                     "policy": "default",
-                    "query": "SELECT * FROM \"anomalies\" WHERE (\"host\"::tag =~ /^$System$/) AND $timeFilter",
+                    "query": "SELECT * FROM \"anomalies\" WHERE (\"host\"::tag =~ /^$System$/) AND (\"algorithm\"::tag =~ /^$Algorithm$/) AND $timeFilter",
                     "rawQuery": true,
                     "refId": "A",
                     "resultFormat": "time_series",
@@ -551,7 +556,7 @@
                     "measurement": "anomalies",
                     "orderByTime": "ASC",
                     "policy": "default",
-                    "query": "SELECT COUNT(\"$Field\") FROM \"anomalies\" WHERE \"$Field\" = true AND $timeFilter GROUP BY \"host\"::tag",
+                    "query": "SELECT COUNT(\"$Field\") FROM \"anomalies\" WHERE \"$Field\" = true AND (\"algorithm\"::tag =~ /^$Algorithm$/) AND $timeFilter GROUP BY \"host\"::tag",
                     "rawQuery": true,
                     "refId": "A",
                     "resultFormat": "table",
@@ -585,16 +590,16 @@
             "type": "table"
         }
     ],
-    "refresh": false,
+    "refresh": "",
     "schemaVersion": 38,
     "tags": [],
     "templating": {
         "list": [
             {
                 "current": {
-                    "selected": true,
-                    "text": "load-15m",
-                    "value": "load-15m"
+                    "selected": false,
+                    "text": "cpu-user",
+                    "value": "cpu-user"
                 },
                 "datasource": {
                     "type": "influxdb",
@@ -615,9 +620,9 @@
             },
             {
                 "current": {
-                    "selected": false,
-                    "text": "system-1",
-                    "value": "system-1"
+                    "selected": true,
+                    "text": "system-3",
+                    "value": "system-3"
                 },
                 "datasource": {
                     "type": "influxdb",
@@ -635,6 +640,29 @@
                 "skipUrlSync": false,
                 "sort": 0,
                 "type": "query"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "IF",
+                    "value": "IF"
+                },
+                "datasource": {
+                    "type": "influxdb",
+                    "uid": "P3C147723CB20F3EF"
+                },
+                "definition": "SHOW TAG VALUES WITH KEY = \"algorithm\"",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "Algorithm",
+                "options": [],
+                "query": "SHOW TAG VALUES WITH KEY = \"algorithm\"",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
             }
         ]
     },
@@ -646,6 +674,6 @@
     "timezone": "",
     "title": "Anomaly Overview",
     "uid": "af670a87-6e31-46b9-8127-d4dde33cc609",
-    "version": 11,
+    "version": 1,
     "weekStart": ""
 }
