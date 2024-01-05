@@ -17,17 +17,18 @@ RUN . anomaly_detection/venv/bin/activate
 ENV PATH="/app/nala/anomaly_detection/venv/bin:$PATH"
 RUN python3.11 -m pip install -r anomaly_detection/requirements.txt
 
-# Copy nala source code
+# Copy dependencies
 WORKDIR /app
 COPY nala/go.mod nala/go.sum ./nala/
 COPY internal/ ./internal/
-COPY nala/*.go ./nala/
-COPY nala/testpy.py ./nala/
-
 
 # Get Go dependencies
 WORKDIR /app/nala
 RUN go mod download
+
+# Copy source code
+COPY nala/*.go ./
+COPY nala/testpy.py ./
 
 # Build nala binary
 RUN go build -o /nala
