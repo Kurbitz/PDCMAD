@@ -72,7 +72,7 @@ func triggerDetection(ctx *gin.Context) {
 		}
 		dbapi.Measurement = "anomalies"
 		log.Println("Writing anomalies to influxdb")
-		if err = dbapi.WriteAnomalies(*anomalies, host); err != nil {
+		if err = dbapi.WriteAnomalies(*anomalies, host, algorithm); err != nil {
 			log.Printf("Error when writing anomalies to influxdb: %v\n", err)
 			return
 		}
