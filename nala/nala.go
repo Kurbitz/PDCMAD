@@ -17,6 +17,7 @@ import (
 var inProgress = false
 
 func triggerDetection(ctx *gin.Context) {
+	log.Println("Anomaly detection request received!")
 	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "metrics")
 	defer dbapi.Close()
 	algorithm := ctx.Param("algorithm")
@@ -25,23 +26,28 @@ func triggerDetection(ctx *gin.Context) {
 	//These checks might be in simba instead?
 	if host == "" {
 		ctx.String(http.StatusOK, "Host field is empty")
+		log.Println("Host field is empty")
 		return
 	}
 	if duration == "" {
 		ctx.String(http.StatusOK, "Duration field is empty")
+		log.Println("Duration field is empty")
 		return
 	}
 	if inProgress {
 		ctx.String(http.StatusOK, "Anomaly detection is already in progress")
+		log.Println("Anomaly detection is already in progress")
 		return
 	}
 	callable, exists := supportedAlgorithms[algorithm]
 	if !exists {
 		ctx.String(http.StatusOK, "Algorithm %v is not supported", algorithm)
+		log.Printf("Algorithm %v is not supported", algorithm)
 		return
 	}
 	inProgress = true
-	detection, err := NewAnomalyDetection(dbapi, host, duration)
+
+	log.Printf("Starting anomaly detection for %v\n", host)
 	if err != nil {
 		ctx.String(http.StatusOK, "%v", err)
 		inProgress = false
@@ -58,11 +64,13 @@ func triggerDetection(ctx *gin.Context) {
 			log.Printf("Anomaly detection failed with: %v\n", err)
 			return
 		}
+		log.Println("Logging anomalies to file")
 		if err = logAnomalies("/tmp/anomalies.csv", host, *anomalies); err != nil {
 			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
 		dbapi.Measurement = "anomalies"
+		log.Println("Writing anomalies to influxdb")
 		if err = dbapi.WriteAnomalies(*anomalies, host); err != nil {
 			log.Printf("Error when writing anomalies to influxdb: %v\n", err)
 			return

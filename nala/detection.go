@@ -25,30 +25,30 @@ func CheckSupportedAlgorithm(algorithm string) bool {
 	return ok
 }
 
-func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration string) (*AnomalyDetection, error) {
+	log.Println("Getting metrics from influxdb")
 	data, err := dbapi.GetMetrics(host, duration)
 	if err != nil {
 		log.Printf("Error when getting metrics from influxdb: %v", err)
 		return nil, err
 	}
-
+	log.Println("Metrics received from influxdb")
 	return &AnomalyDetection{
 		Duration: duration,
 		Data:     data,
 	}, nil
 }
 
-func isolationForest(ad *AnomalyDetection) (*[]system_metrics.AnomalyDetectionOutput, error) {
-	inputFilePath := "/tmp/go_output.csv"
-	outputFilePath := "/tmp/py_output.csv"
+	log.Println("Starting anomaly detection with Isolation Forest")
+
 	//Sets Arguments to the command
 
+	log.Println("Writing data to file")
 	// Write data to file
 	if err := writeDataToFile(inputFilePath, ad.Data); err != nil {
 		log.Printf("Error when writing data to file: %v", err)
 		return nil, err
 	}
-
+	log.Println("Executing anomaly detection script")
 	cmd := exec.Command("python", "anomaly_detection/outliers.py", inputFilePath, outputFilePath)
 	//Better information in case of error in script execution
 	cmd.Stderr = os.Stderr
@@ -57,12 +57,13 @@ func isolationForest(ad *AnomalyDetection) (*[]system_metrics.AnomalyDetectionOu
 		log.Printf("Error when running anomaly detection script: %v", err)
 		return nil, err
 	}
-	//TODO outputfile path is local to my machine, change to your own
+	log.Println("Scipt finished executing, parsing output")
 	anomalies, err := parseIFOutput(outputFilePath, ad.Data.Id)
 	if err != nil {
 		log.Printf("Error when transforming output: %v", err)
 		return nil, err
 	}
+	log.Println("Isoaltion Forest anomaly detection done!")
 	return anomalies, nil
 }
 
