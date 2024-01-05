@@ -6,5 +6,4 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
-
-print(sys.argv[1]) # Prints argument on index 1 ie argument 2
+print(sys.argv[1])

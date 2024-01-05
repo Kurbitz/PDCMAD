@@ -52,6 +52,11 @@ services:
             - ${NALA_PORT}:8088
         environment:
             GIN_MODE: release
+            INFLUXDB_HOST: "influxdb"
+            INFLUXDB_PORT: ${INFLUXDB_PORT}
+            INFLUXDB_ORG: ${INFLUXDB_ORG}
+            INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
+            INFLUXDB_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
         depends_on:
             - influxdb
 

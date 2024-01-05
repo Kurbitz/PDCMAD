@@ -192,6 +192,16 @@ var cleanFlags = []cli.Flag{
 			"b",
 		},
 	},
+	&cli.StringFlag{
+		Name:     "dbmeasurement",
+		Usage:    "InfluxDB measurement",
+		EnvVars:  []string{"INFLUXDB_MEASUREMENT"},
+		Value:    "metrics",
+		Category: "Database",
+		Aliases: []string{
+			"M",
+		},
+	},
 }
 
 // App is the main application
@@ -458,7 +468,7 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 			Port:        ctx.String("dbport"),
 			Org:         ctx.String("dborg"),
 			Bucket:      ctx.String("dbbucket"),
-			Measurement: "metrics",
+			Measurement: ctx.String("dbmeasurement"),
 		},
 		All:     ctx.Bool("all"),
 		Startat: startAt,

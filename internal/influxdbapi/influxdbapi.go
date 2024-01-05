@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"internal/system_metrics"
+	"log"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -82,6 +83,54 @@ func (api InfluxDBApi) WriteMetrics(m system_metrics.SystemMetric, gap time.Dura
 	return nil
 }
 
+// TODO duration need to be checked before use
+func (api InfluxDBApi) GetMetrics(host, duration string) (system_metrics.SystemMetric, error) {
+	queryAPI := api.QueryAPI(api.Org)
+	query := fmt.Sprintf(`from(bucket: "%v") |> range(start: -%v) |> filter(fn: (r) => r._measurement == "%v") |> filter(fn: (r) => r["host"] == "%v") |> pivot(rowKey: ["_time"],columnKey: ["_field"], valueColumn: "_value")`, api.Bucket, duration, api.Measurement, host)
+	result, err := queryAPI.Query(context.Background(), query)
+	if err != nil {
+		log.Printf("Error performing query on bucket '%s': %s\n", api.Bucket, err)
+		return system_metrics.SystemMetric{}, err
+	}
+	if result == nil {
+		log.Printf("Duration '%v' on bucket '%v' is empty", duration, api.Bucket)
+		return system_metrics.SystemMetric{}, fmt.Errorf("Empty query result")
+	}
+	var metrics []map[string]interface{}
+	// Use Next() to iterate over query result lines
+	for result.Next() {
+		currentValue := result.Record().Values()
+		delete(currentValue, "_start")
+		delete(currentValue, "_stop")
+		delete(currentValue, "_time")
+		metrics = append(metrics, currentValue)
+	}
+
+	if result.Err() != nil {
+		log.Printf("Query error: %s\n", result.Err().Error())
+		return system_metrics.SystemMetric{}, result.Err()
+	}
+
+	parsed, err := json.Marshal(metrics)
+	if err != nil {
+		log.Printf("Error when encoding data to json: %v\n", err)
+		return system_metrics.SystemMetric{}, err
+	}
+	var parsedMetrics []*system_metrics.Metric
+	err = json.Unmarshal(parsed, &parsedMetrics)
+	if err != nil {
+		log.Printf("Error when decoding json to struct: %v\n", err)
+		return system_metrics.SystemMetric{}, err
+	}
+
+	if len(parsedMetrics) == 0 {
+		log.Printf("No metrics found for host '%s' in bucket '%s'\n", host, api.Bucket)
+		return system_metrics.SystemMetric{}, fmt.Errorf("No metrics found for host '%s' in bucket '%s'", host, api.Bucket)
+	}
+
+	return system_metrics.SystemMetric{Id: host, Metrics: parsedMetrics}, nil
+}
+
 // Deletes all the metrics contained in the bucket in the time interval
 // defined by the current time and the range specified by t
 func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
@@ -147,5 +196,15 @@ func (api InfluxDBApi) WriteMetric(m system_metrics.Metric, id string, timeStamp
 		return err
 	}
 
+	return nil
+}
+
+func (api InfluxDBApi) WriteAnomalies(anomalies []system_metrics.AnomalyDetectionOutput, host string) error {
+	writeAPI := api.WriteAPI(api.Org, api.Bucket)
+	for _, a := range anomalies {
+		p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": host}, a.ToMap(), time.Unix(a.Timestamp, 0))
+		writeAPI.WritePoint(p)
+	}
+	writeAPI.Flush()
 	return nil
 }
