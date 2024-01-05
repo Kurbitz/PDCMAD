@@ -40,14 +40,14 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up" json:"server-up"`
 }
 
-type Anomaly struct {
+type AnomalyEvent struct {
 	Timestamp int64  `csv:"timestamp" json:"timestamp"`
 	Host      string `csv:"host" json:"host"`
 	Metric    string `csv:"metric" json:"metric"`
 	Comment   string `csv:"comment" json:"comment"`
 }
 
-type AnomalyMetric struct {
+type AnomalyDetectionOutput struct {
 	Timestamp               int64 `csv:"timestamp" json:"timestamp"`
 	Load1m                  bool  `csv:"load-1m" json:"load-1m"`
 	Load5m                  bool  `csv:"load-5m" json:"load-5m"`
@@ -74,7 +74,7 @@ type AnomalyMetric struct {
 	Server_Up               bool  `csv:"server-up" json:"server-up"`
 }
 
-func (a Anomaly) ToMap() map[string]interface{} {
+func (a AnomalyEvent) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp": a.Timestamp,
 		"host":      a.Host,
@@ -112,7 +112,7 @@ func (m Metric) ToMap() map[string]interface{} {
 	}
 }
 
-func (am AnomalyMetric) ToMap() map[string]interface{} {
+func (am AnomalyDetectionOutput) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp":               am.Timestamp,
 		"load-1m":                 am.Load1m,

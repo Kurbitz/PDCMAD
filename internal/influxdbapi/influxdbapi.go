@@ -193,7 +193,7 @@ func (api InfluxDBApi) WriteMetric(m system_metrics.Metric, id string, timeStamp
 	return nil
 }
 
-func (api InfluxDBApi) WriteAnomalies(anomalies []system_metrics.AnomalyMetric, host string) error {
+func (api InfluxDBApi) WriteAnomalies(anomalies []system_metrics.AnomalyDetectionOutput, host string) error {
 	writeAPI := api.WriteAPI(api.Org, api.Bucket)
 	for _, a := range anomalies {
 		p := influxdb2.NewPoint(api.Measurement, map[string]string{"host": host}, a.ToMap(), time.Unix(a.Timestamp, 0))

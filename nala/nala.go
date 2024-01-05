@@ -95,13 +95,13 @@ Takes AnomalyMetric struct and writes it to a log file
 Logfile output: [time, host, metric, comment]
 Returns error if something fails
 */
-func logAnomalies(filePath string, host string, data []system_metrics.AnomalyMetric) error {
-	outputArray := []system_metrics.Anomaly{}
+func logAnomalies(filePath string, host string, data []system_metrics.AnomalyDetectionOutput) error {
+	outputArray := []system_metrics.AnomalyEvent{}
 	for _, v := range data {
 		r := reflect.ValueOf(v)
 		for i := 1; i < r.NumField(); i++ {
 			if r.Field(i).Interface() == true {
-				outputArray = append(outputArray, system_metrics.Anomaly{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
+				outputArray = append(outputArray, system_metrics.AnomalyEvent{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
 			}
 		}
 	}

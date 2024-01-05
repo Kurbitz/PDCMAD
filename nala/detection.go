@@ -16,7 +16,7 @@ type AnomalyDetection struct {
 	Data     system_metrics.SystemMetric
 }
 
-var supportedAlgorithms = map[string]func(ad *AnomalyDetection) (*[]system_metrics.AnomalyMetric, error){
+var supportedAlgorithms = map[string]func(ad *AnomalyDetection) (*[]system_metrics.AnomalyDetectionOutput, error){
 	"IF": isolationForest,
 }
 
@@ -38,7 +38,7 @@ func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration st
 	}, nil
 }
 
-func isolationForest(ad *AnomalyDetection) (*[]system_metrics.AnomalyMetric, error) {
+func isolationForest(ad *AnomalyDetection) (*[]system_metrics.AnomalyDetectionOutput, error) {
 	inputFilePath := "/tmp/go_output.csv"
 	outputFilePath := "/tmp/py_output.csv"
 	//Sets Arguments to the command
@@ -71,8 +71,8 @@ Reads from anomaly detection output file and transforms data to anomalym struct
 Returns Anomalystruct
 Returns error if something fails
 */
-func parseIFOutput(filename, host string) (*[]system_metrics.AnomalyMetric, error) {
-	anomalyData := []system_metrics.AnomalyMetric{}
+func parseIFOutput(filename, host string) (*[]system_metrics.AnomalyDetectionOutput, error) {
+	anomalyData := []system_metrics.AnomalyDetectionOutput{}
 	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		log.Printf("Error when opening file: %v", err)
