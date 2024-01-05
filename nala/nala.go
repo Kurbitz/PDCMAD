@@ -66,13 +66,13 @@ func triggerDetection(ctx *gin.Context) {
 			return
 		}
 		log.Println("Logging anomalies to file")
-		if err = logAnomalies("/tmp/anomalies.csv", host, *anomalies); err != nil {
+		if err = logAnomalies("/tmp/anomalies.csv", host, algorithm, *anomalies); err != nil {
 			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
 		dbapi.Measurement = "anomalies"
 		log.Println("Writing anomalies to influxdb")
-		if err = dbapi.WriteAnomalies(*anomalies, host); err != nil {
+		if err = dbapi.WriteAnomalies(*anomalies, host, algorithm); err != nil {
 			log.Printf("Error when writing anomalies to influxdb: %v\n", err)
 			return
 		}
@@ -103,13 +103,13 @@ Takes AnomalyMetric struct and writes it to a log file
 Logfile output: [time, host, metric, comment]
 Returns error if something fails
 */
-func logAnomalies(filePath string, host string, data []system_metrics.AnomalyDetectionOutput) error {
+func logAnomalies(filePath string, host string, algorithm string, data []system_metrics.AnomalyDetectionOutput) error {
 	outputArray := []system_metrics.AnomalyEvent{}
 	for _, v := range data {
 		r := reflect.ValueOf(v)
 		for i := 1; i < r.NumField(); i++ {
 			if r.Field(i).Interface() == true {
-				outputArray = append(outputArray, system_metrics.AnomalyEvent{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: "Isolation forest"})
+				outputArray = append(outputArray, system_metrics.AnomalyEvent{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: algorithm})
 			}
 		}
 	}
