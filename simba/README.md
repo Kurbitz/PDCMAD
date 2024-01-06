@@ -1,6 +1,7 @@
-# PDC-MAD
-Performance data collection, monitoring and anomaly detection tool.
+# Simba
+Simulation with bad actors.
 ### First time setup
+
 If you have not set up InfluxDB yet then use this command.
 ```shell
 docker run -p 8086:8086 --network-alias influxdb -v myInfluxVolume:/var/lib/influxdb2 influxdb:latest
