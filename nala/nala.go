@@ -14,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// inProgress is a global status variable that is used to check if an anomaly detection is already in progress.
+// FIXME: This is not thread safe, but it should be fine for what we are doing. We could probably use a mutex to make it thread safe.
 var inProgress = false
 
 func triggerDetection(ctx *gin.Context) {
@@ -21,7 +23,7 @@ func triggerDetection(ctx *gin.Context) {
 	algorithm := ctx.Param("algorithm")
 	host := ctx.Param("host")
 	duration := ctx.Param("duration")
-	//These checks might be in simba instead?
+
 	if host == "" {
 		ctx.String(http.StatusBadRequest, "Host field is empty")
 		log.Println("Host field is empty")
@@ -37,18 +39,26 @@ func triggerDetection(ctx *gin.Context) {
 		log.Println("Anomaly detection is already in progress")
 		return
 	}
+
+	// Check if the algorithm is supported by looking it up in the supportedAlgorithms map
 	detection, exists := supportedAlgorithms[algorithm]
 	if !exists {
 		ctx.String(http.StatusBadRequest, "Algorithm %v is not supported", algorithm)
 		log.Printf("Algorithm %v is not supported", algorithm)
 		return
 	}
-	inProgress = true
 
+	// Set inProgress to true so that we can't trigger another anomaly detection while one is already running
+	inProgress = true
 	log.Printf("Starting anomaly detection for %v\n", host)
+
 	// Create the influxdb api
 	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "metrics")
 	defer dbapi.Close()
+
+	// Create the parameters for the anomaly detection
+	// This is done here so that we can return an error if the parameters are invalid
+	// The data from the databse will be fetched here
 	parameters, err := NewAnomalyDetection(dbapi, host, duration)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, "%v", err)
@@ -56,11 +66,14 @@ func triggerDetection(ctx *gin.Context) {
 		return
 	}
 
+	// Start a goroutine that will run the anomaly detection
 	go func() {
+		// Make sure to set inProgress to false when the function returns
 		defer func() {
 			inProgress = false
 		}()
 
+		// Trigger the anomaly detection, this may take a while and can fail in unknown ways all depending on the algorithm
 		anomalies, err := detection(parameters)
 		if err != nil {
 			log.Printf("Anomaly detection failed with: %v\n", err)
@@ -71,6 +84,8 @@ func triggerDetection(ctx *gin.Context) {
 			log.Printf("Error when writing anomalies to file: %v\n", err)
 			return
 		}
+
+		// Make sure to set the measurement to anomalies before writing to influxdb
 		dbapi.Measurement = "anomalies"
 		log.Println("Writing anomalies to influxdb")
 		if err = dbapi.WriteAnomalies(*anomalies, host, algorithm); err != nil {
@@ -80,47 +95,63 @@ func triggerDetection(ctx *gin.Context) {
 		log.Println("Anomaly detection is done!")
 	}()
 
+	// If everything went well, return a 200 OK
 	ctx.String(http.StatusOK, "Anomaly detection triggered!\n")
 }
 
-// Runs "testyp.py" and prints the output
+// pythonSmokeTest runs a simple python script to check if the Python environment is working
+// If the Python environment is not working, the program will exit.
 func pythonSmokeTest() {
-
 	log.Println("Running python smoke test...")
+
+	// Define command to run
 	cmd := exec.Command("python", "./testpy.py", "Python is working!")
 
-	//executes command, listends to stdout, puts w/e into "out" var unless error
+	// Executes command, waits for it to finish and returns output
+	// If the commands terminates with an error code, err will be set
 	out, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
 	}
-	//Print, Need explicit typing or it prints an array with unicode numbers
+
+	// Print the Python output
+	// output needs to be converted to string
 	log.Print(string(out))
 	log.Println("Python smoke test complete!")
 }
 
-/*
-Takes AnomalyMetric struct and writes it to a log file
-Logfile output: [time, host, metric, comment]
-Returns error if something fails
-*/
+// logAnomalies takes a slice of AnomalyDetectionOutput structs, converts it to AnomalyEvent structs and writes it to a log file.
+// The format of the log file is defined by the AnomalyEvent struct.
+// The log file is written to the path specified by filePath.
+// If the file does not exist, it will be created, if it does exist, it will be appended to.
+// Returns an error if any of the steps fail.
 func logAnomalies(filePath string, host string, algorithm string, data []system_metrics.AnomalyDetectionOutput) error {
+	// Convert the AnomalyDetectionOutput structs to AnomalyEvent structs
 	outputArray := []system_metrics.AnomalyEvent{}
 	for _, v := range data {
+		// Use reflection to get the fields of the struct
 		r := reflect.ValueOf(v)
+
+		// Iterate over the fields and if any value is true, add it to the output array as an AnomalyEvent
+		// This means any single AnomalyDetectionOutput struct can result in multiple AnomalyEvent structs
+		// Skip the first field (Timestamp) because it is not a bool
 		for i := 1; i < r.NumField(); i++ {
 			if r.Field(i).Interface() == true {
+				// Get the name of the CSV tag of the field, this is the name of the metric
 				outputArray = append(outputArray, system_metrics.AnomalyEvent{Timestamp: v.Timestamp, Host: host, Metric: r.Type().Field(i).Tag.Get("csv"), Comment: algorithm})
 			}
 		}
 	}
 
+	// Open the file for writing and append to it if it exists
 	outputFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
 	}
 	defer outputFile.Close()
+
+	// Write the AnomalyEvent structs to the file
 	err = gocsv.MarshalFile(&outputArray, outputFile)
 	if err != nil {
 		log.Printf("Error while parsing metrics from file: %v", err)
@@ -129,6 +160,8 @@ func logAnomalies(filePath string, host string, algorithm string, data []system_
 	return nil
 }
 
+// checkEnv checks if all the required environment variables are set.
+// If any of the required environment variables are not set, the program will exit.
 func checkEnv() {
 	log.Println("Checking environment variables...")
 
@@ -171,6 +204,7 @@ func setupEndpoints(router *gin.Engine) {
 
 func main() {
 	log.Println("Starting Nala...")
+	// Run some startup checks
 	pythonSmokeTest()
 	checkEnv()
 
@@ -178,6 +212,7 @@ func main() {
 	router := gin.Default()
 	setupEndpoints(router)
 
-
+	// Start the router
+	// Needs 0.0.0.0 to bind to any interface
 	router.Run("0.0.0.0:8088")
 }
