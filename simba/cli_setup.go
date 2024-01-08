@@ -13,45 +13,55 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+// Eeach command has its own struct containing the flags passed to it.
+// The flags are parsed in the Parse*Flags functions.
+// This is done to avoid having to pass a lot of arguments to the functions and allow us to separate parsing from the actual logic.
+
+// To add a new command, add a new struct here and add a new command to the App variable. Then add the logic to the corresponding command in commands.go
+
+// DBInfo is a struct containing the information needed to connect to the database
+// It is used by several commands and is defined here to avoid duplication.
 type DBInfo struct {
-	Token       string
-	Host        string
-	Port        string
-	Org         string
-	Bucket      string
-	Measurement string
+	Token       string // InfluxDB token
+	Host        string // InfluxDB hostname
+	Port        string // InfluxDB port
+	Org         string // InfluxDB organization
+	Bucket      string // InfluxDB bucket
+	Measurement string // InfluxDB measurement
 }
 
 // FillArgs is a struct containing the flags passed to the fill command
 type FillArgs struct {
-	DBArgs   DBInfo
-	Duration time.Duration
-	StartAt  time.Duration
-	Gap      time.Duration
-	Anomaly  string
-	Files    []string
+	DBArgs   DBInfo        // DBInfo struct containing the database information
+	Duration time.Duration // Duration of the simulation
+	StartAt  time.Duration // How far into the file to start the simulation
+	Gap      time.Duration // How much time to leave between the last metric and now for future simulations
+	Anomaly  string        // Which anomaly to use (see error_injection.go)
+	Files    []string      // The CSV files of the metrics to simulate
 }
 
 // StreamArgs is a struct containing the flags passed to the stream command
 type StreamArgs struct {
-	DBArgs         DBInfo
-	Duration       time.Duration
-	Startat        time.Duration
-	TimeMultiplier int
-	Append         bool
-	Anomaly        string
-	File           string
+	DBArgs         DBInfo        // DBInfo struct containing the database information
+	Duration       time.Duration // Duration of the simulation
+	Startat        time.Duration // How far into the file to start the simulation
+	TimeMultiplier int           // How much to speed up the simulation
+	Append         bool          // Whether to append to the latest metric or not
+	Anomaly        string        // Which anomaly to use (see error_injection.go)
+	File           string        // The CSV file of the metrics to simulate
 }
 
 // CleanArgs is a struct containing the flags passed to the clean command
 type CleanArgs struct {
-	DBArgs  DBInfo
-	All     bool
-	Duration time.Duration
-	Hosts   []string
+	DBArgs   DBInfo        // DBInfo struct containing the database information
+	All      bool          // Whether to delete all the metrics or not
+	Duration time.Duration // How far into the past to delete metrics
+	Hosts    []string      // The hosts to delete metrics from
 }
 
-// Common flags for the simulate command
+// Common flags for the fill and stream commands
+// V2 of urfave/cli does not support shared flags so to avoid duplication we define them here and pass them to the commands
+// FIXME: Use shared flags when (if) they are implemented in V3
 var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:  "duration",
@@ -70,7 +80,8 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:  "anomaly",
+		Name: "anomaly",
+		// This adds the available anomalies to the help text in kind of a hacky way
 		Usage: "Select which type of anomaly to use. Available: " + strings.Join(maps.Keys(AnomalyMap), ", "),
 		Value: "",
 		Aliases: []string{
@@ -131,6 +142,7 @@ var simulateFlags = []cli.Flag{
 
 // App is the main application
 // All commands and flags are defined here
+// See urfave/cli documentation for more information
 var App = &cli.App{
 	Name:  "simba",
 	Usage: "Simulate systems producing metrics and feed them to InfluxDB",
@@ -333,17 +345,23 @@ func ParseDurationString(ds string) (time.Duration, error) {
 	if ds == "" {
 		return 0, nil
 	}
+	// Regex to match the duration string
+	// Captures the amount and the unit in different groups
 	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
+
+	// Find the matches
 	match := r.FindStringSubmatch(ds)
 	if len(match) == 0 {
 		return 0, fmt.Errorf("invalid time string: %s", ds)
 	}
 
+	// Convert the amount to an int
 	amount, err := strconv.Atoi(match[1])
 	if err != nil {
 		return 0, fmt.Errorf("invalid time string: %s", ds)
 	}
 
+	// Return the duration based on the unit
 	switch match[2] {
 	case "d":
 		return ((time.Hour * 24) * time.Duration(amount)), nil
@@ -358,12 +376,12 @@ func ParseDurationString(ds string) (time.Duration, error) {
 }
 
 // checkANomalyString checks if the anomalyString given exists in the AnomalyMap
-// if it does not exists it returns an error
-// if it does exist or is empty the anomalyString gets returned
+// If it does not exist, it returns an error
 func checkAnomalyString(anomalyString string) (string, error) {
 	if anomalyString == "" {
 		return anomalyString, nil
 	}
+	// Check if the anomaly exists in the AnomalyMap
 	if _, exists := AnomalyMap[anomalyString]; exists {
 		return anomalyString, nil
 	}
@@ -371,22 +389,24 @@ func checkAnomalyString(anomalyString string) (string, error) {
 	return anomalyString, fmt.Errorf("error injection %s is not implemented", anomalyString)
 }
 
-func ValidateFile(file string) error {
+// ValidateFile validates that the filePath is a valid file
+// Returns an error if the file does not exist, is a directory, is not a .csv file or is empty
+func ValidateFile(filePath string) error {
 	// Validate the file exists
-	if _, err := os.Stat(file); os.IsNotExist(err) {
-		return fmt.Errorf("file %s does not exist", file)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("file %s does not exist", filePath)
 	}
 	// Validate the file is not a directory
-	if info, err := os.Stat(file); err == nil && info.IsDir() {
-		return fmt.Errorf("file %s is a directory", file)
+	if info, err := os.Stat(filePath); err == nil && info.IsDir() {
+		return fmt.Errorf("file %s is a directory", filePath)
 	}
 	// Validate the file is a .csv files
-	if filepath.Ext(file) != ".csv" {
-		return fmt.Errorf("file %s is not a .csv file", file)
+	if filepath.Ext(filePath) != ".csv" {
+		return fmt.Errorf("file %s is not a .csv file", filePath)
 	}
 	// Validate the file is not empty
-	if info, err := os.Stat(file); err == nil && info.Size() == 0 {
-		return fmt.Errorf("file %s is empty", file)
+	if info, err := os.Stat(filePath); err == nil && info.Size() == 0 {
+		return fmt.Errorf("file %s is empty", filePath)
 	}
 	return nil
 }
@@ -398,6 +418,10 @@ func GetIdFromFileName(file string) string {
 	return filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
 
 }
+
+// ParseFillFlags parses the flags passed to the fill command
+// Returns a FillArgs struct containing the parsed flags
+// Returns an error if the flags are invalid
 func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if ctx.String("dbtoken") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
@@ -447,6 +471,9 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	}, nil
 }
 
+// ParseStreamFlags parses the flags passed to the stream command
+// Returns a StreamArgs struct containing the parsed flags
+// Returns an error if the flags are invalid
 func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if ctx.String("dbtoken") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
@@ -493,8 +520,9 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	}, nil
 }
 
-
-
+// ParseCleanFlags parses the flags passed to the clean command
+// Returns a CleanArgs struct containing the parsed flags
+// Returns an error if the flags are invalid
 func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	var duration time.Duration
 	var err error
@@ -526,8 +554,8 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 			Bucket:      ctx.String("dbbucket"),
 			Measurement: ctx.String("dbmeasurement"),
 		},
-		All:     ctx.Bool("all"),
+		All:      ctx.Bool("all"),
 		Duration: duration,
-		Hosts:   hosts,
+		Hosts:    hosts,
 	}, nil
 }
