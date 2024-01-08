@@ -8,11 +8,20 @@ import (
 	"github.com/gocarina/gocsv"
 )
 
+// SystemMetric is a struct that contains the id of a system and a slice of metrics belonging to that system
+// The id is used to identify the system in the database.
+// A slice of metrics is used to store the metrics of the system.
+// A zero value for SystemMetric is not valid or useful.
 type SystemMetric struct {
-	Id      string
-	Metrics []*Metric
+	Id      string    // Id is the id of the system
+	Metrics []*Metric // Metrics is a slice of metrics belonging to the system
 }
 
+// Metric is a struct that contains the metrics of a system at a specific time.
+// The fields are the metrics that are collected from the system as specified in the dataset by Westermo.
+// See: https://github.com/westermo/test-system-performance-dataset/ for more information.
+// Tags are used to convert parse structs to and from csv and json.
+// A zero value for Metric is not valid.
 type Metric struct {
 	Timestamp               int64   `csv:"timestamp" json:"timestamp"`
 	Load1m                  float64 `csv:"load-1m" json:"load-1m"`
@@ -40,13 +49,26 @@ type Metric struct {
 	Server_Up               int64   `csv:"server-up" json:"server-up"`
 }
 
+// AnomalyEvent is a struct that contains the information about an anomaly event.
+// This is intended to be used to log the anomalies to a file in a generic way since the anomaly detection algorithms
+// might have different information about the anomaly. Providing fields for each of the metrics would be cumbersome and
+// potentially not possible if the anomaly detection algorithm does not have information about all the metrics.
+// This struct is not stored in the database because the string fields are not easily visualized in Grafana.
+// Tags are used to convert parse structs to and from csv.
+// A zero value for AnomalyEvent is not valid.
 type AnomalyEvent struct {
-	Timestamp int64  `csv:"timestamp"`
-	Host      string `csv:"host"`
-	Metric    string `csv:"metric"`
-	Comment   string `csv:"comment"`
+	Timestamp int64  `csv:"timestamp"` // Timestamp is the time when the anomaly occurred
+	Host      string `csv:"host"`      // Host is the id of the system where the anomaly occurred
+	Metric    string `csv:"metric"`    // Metric is the metric that triggered the anomaly (if applicable)
+	Comment   string `csv:"comment"`   // Comment is a comment about the anomaly (currently used to identify the algorithm that detected the anomaly)
 }
 
+// AnomalyDetectionOutput is a struct that contains every metric (same fields as Metric) and whether or not it is an anomaly.
+// This is intended to be the output of the anomaly detection algorithms and is what is used to store the anomalies
+// in the database. It is not as generic as AnomalyEvent but we found that it was easier to work with.
+// This struct is stored in the database because it contains the same fields as Metric and is easily visualized in Grafana.
+// Tags are used to convert parse structs to and from csv.
+// A zero value for AnomalyDetectionOutput is not valid.
 type AnomalyDetectionOutput struct {
 	Timestamp               int64 `csv:"timestamp"`
 	Load1m                  bool  `csv:"load-1m"`
@@ -74,6 +96,12 @@ type AnomalyDetectionOutput struct {
 	Server_Up               bool  `csv:"server-up"`
 }
 
+// The ToMap functions are used to convert structs to maps.
+// They need to be implemented for every struct that is used to store data in the database.
+// This is because the influxdb api requires a map to write to the database.
+// They could probably be implemented in a more generic way using reflections but this works for now.
+
+// ToMap converts a Metric to a map[string]interface{}.
 func (a AnomalyEvent) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp": a.Timestamp,
@@ -83,6 +111,7 @@ func (a AnomalyEvent) ToMap() map[string]interface{} {
 	}
 }
 
+// ToMap converts a Metric to a map[string]interface{}.
 func (m Metric) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp":               m.Timestamp,
@@ -112,6 +141,7 @@ func (m Metric) ToMap() map[string]interface{} {
 	}
 }
 
+// ToMap converts a AnomalyDetectionOutput to a map[string]interface{}.
 func (am AnomalyDetectionOutput) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"timestamp":               am.Timestamp,
@@ -141,16 +171,21 @@ func (am AnomalyDetectionOutput) ToMap() map[string]interface{} {
 	}
 }
 
-// SliceBetween returns a slice of metrics between the startAt time and the duration
-// If duration is 0, it will return all metrics after the startAt time
+// SliceBetween slices the metrics between the startAt time and the duration.
+// The startAt time specifies how far into the metric file we should start the slice.
+// The duration specifies how long the slice should be.
+// If duration is 0, it will return all metrics after the startAt time.
+// Will modify the metrics slice in place.
 func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
-
+	// Find the first and last index of the slice
 	startIndex := 0
 	endIndex := len(sm.Metrics)
 
+	// Check if the duration exceeds the length of the metric file
 	if time.Duration(time.Duration.Seconds(duration+startAt)) > time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) {
 		log.Fatal("Duration exceeds length of the metric file")
 	}
+
 	// Find the first metric that is after the startAt time
 	for i, m := range sm.Metrics {
 		if time.Second*time.Duration(m.Timestamp) >= startAt {
@@ -158,6 +193,7 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 			break
 		}
 	}
+
 	// If duration is 0 or the duration is longer than the last metric, return the all metrics after the startAt time
 	lastTimestamp := time.Duration(sm.Metrics[len(sm.Metrics)-1].Timestamp) * time.Second
 	if duration == 0 || startAt+duration >= lastTimestamp {
@@ -165,7 +201,7 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 		return
 	}
 
-	// Go from the startat time and duration forward
+	// The last metric will be duration time after the startAt time
 	for i, m := range sm.Metrics[startIndex:] {
 		if time.Second*time.Duration(m.Timestamp) >= startAt+duration {
 			endIndex = i
@@ -173,20 +209,28 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 		}
 	}
 
+	// Slice the metrics between the start and end index
 	sm.Metrics = sm.Metrics[startIndex : startIndex+endIndex]
 }
 
+// ReadFromFile reads a CSV file of metrics and returns a SystemMetric struct.
+// The CSV file should have the same format as the dataset provided by Westermo.
+// Returns an error if something fails.
 func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
+	// Open the file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
+	// Unmarshal the file into a slice of metrics
 	metrics := []*Metric{}
 	if err := gocsv.UnmarshalFile(file, &metrics); err != nil {
 		panic(err)
 	}
+
+	// Create a SystemMetric struct and add the id and metrics
 	var systemMetrics = SystemMetric{Id: id, Metrics: metrics}
 
 	return &systemMetrics, nil
