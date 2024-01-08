@@ -261,14 +261,6 @@ var App = &cli.App{
 			Action:    invokeClean,
 			Flags:     cleanFlags,
 		},
-		{
-			Name:  "trigger",
-			Usage: "Trigger anomaly detection",
-			Action: func(ctx *cli.Context) error {
-				fmt.Println("trigger")
-				return nil
-			},
-		},
 	},
 }
 
