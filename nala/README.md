@@ -13,58 +13,23 @@ This tool handles the interaction between user, database, and anomaly detection 
 
 * Python 3.11
 * Go 1.20
-* Docker
 
-### Installing
-
-Clone PDC-MAD repository to desired location.
-
-Go to the now downloaded folder.
+## Usage
+### Anomaly detection
 ```shell
-cd /PATH/TO/PDC-MAD
+curl localhost:8088/[Algorithm]/[host]/[duration]
 ```
-You need to set up the .env file before building the container. there is an .env_example in the docker folder so you know what the structure looks like.
-
-Next step is to build nala.
+This will trigger given detection algorithm using data from the host of given duration. 
+It is done by querying the data from the database with given parameters. 
+#### Example
 ```shell
-docker build --tag nala -f nala/Dockerfile .
-```
-This will take a few minutes depending on hardware.
-### Setting up the docker stack
-
-When it is done you can run it by going to the docker folder of PDC-MAD:
-```shell
-cd /PATH/TO/PDC-MAD
-```
-And running the container
-```shell
-docker compose up
-```
-This will set everything up.
-
-### Parameters
-There are a few parameters that the endpoint can handle.
-**Test**
-```shell
-curl localhost:8088/nala/test
-```
-This will run a "smoketest" to test if the python environment is working.
-
-
-**Trigger algorithm**
-```shell
-curl localhost:8088/nala/[Algorithm]/[host]/[duration]
-```
-This will trigger given algorithm using data from the host for the duration.
-**Example**
-```shell
-curl localhost:8088/nala/IF/system-1/36h
+curl localhost:8088/IF/system-1/36h
 ```
 This will trigger Isolation Forest on data from system-1 taking data from 36 hours ago to now.
 
-**Status**
+### Status
 ```shell
-curl localhost:8088/nala/status
+curl localhost:8088/status
 ```
 A status check if an anomaly detection algorithm is currently running 
 
