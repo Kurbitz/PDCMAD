@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/maps"
 )
 
 type DBInfo struct {
@@ -69,7 +71,7 @@ var simulateFlags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:  "anomaly",
-		Usage: "Select which type of anomaly to use",
+		Usage: "Select which type of anomaly to use. Available: " + strings.Join(maps.Keys(AnomalyMap), ", "),
 		Value: "",
 		Aliases: []string{
 			"a",
@@ -217,42 +219,36 @@ var App = &cli.App{
 	EnableBashCompletion: true,
 	Commands: []*cli.Command{
 		{
-			Name:  "simulate",
-			Usage: "Simulate metrics from file(s)",
-			Subcommands: []*cli.Command{
-				{
-					Name:      "fill",
-					Usage:     "Fill the database with data from file(s)",
-					ArgsUsage: "<file1> <file2> ...",
-					Action:    invokeFill,
-					Flags: append(simulateFlags, &cli.StringFlag{
-						Name:  "gap",
-						Usage: "Gap to now",
-						Value: "",
-						Aliases: []string{
-							"g",
-						},
-					}),
+			Name:      "fill",
+			Usage:     "Fill the database with data from file(s)",
+			ArgsUsage: "<file1> <file2> ...",
+			Action:    invokeFill,
+			Flags: append(simulateFlags, &cli.StringFlag{
+				Name:  "gap",
+				Usage: "Gap to now",
+				Value: "",
+				Aliases: []string{
+					"g",
 				},
-				{
-					Name:      "stream",
-					Usage:     "stream data from file(s) in real time to the database",
-					ArgsUsage: "<file1> <file2> ...",
-					Action:    invokeStream,
-					Flags: append(simulateFlags, &cli.IntFlag{
-						Name:  "timemultiplier",
-						Usage: "Increase insertion speed",
-						Value: 1,
-						Aliases: []string{
-							"m",
-						},
-					}, &cli.BoolFlag{
-						Name:  "append",
-						Usage: "Insert from the latest metric",
-						Value: false,
-					}),
+			}),
+		},
+		{
+			Name:      "stream",
+			Usage:     "stream data from file(s) in real time to the database",
+			ArgsUsage: "<file1> <file2> ...",
+			Action:    invokeStream,
+			Flags: append(simulateFlags, &cli.IntFlag{
+				Name:  "timemultiplier",
+				Usage: "Increase insertion speed",
+				Value: 1,
+				Aliases: []string{
+					"m",
 				},
-			},
+			}, &cli.BoolFlag{
+				Name:  "append",
+				Usage: "Insert from the latest metric",
+				Value: false,
+			}),
 		},
 		{
 			Name:      "clean",

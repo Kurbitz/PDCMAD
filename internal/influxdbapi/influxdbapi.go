@@ -154,8 +154,7 @@ func (api InfluxDBApi) DeleteBucket(t time.Duration) error {
 		return err
 	}
 
-	fmt.Printf("Data from bucket '%s' deleted succesfully\n", api.Bucket)
-
+	fmt.Printf("Deleted contents of bucket '%s' with measurement '%s'\n", api.Bucket, api.Measurement)
 	return nil
 }
 
@@ -183,8 +182,7 @@ func (api InfluxDBApi) DeleteHost(h string, t time.Duration) error {
 		return err
 	}
 
-	fmt.Printf("Data from host '%s' in bucket '%s' deleted succesfully\n", h, api.Bucket)
-
+	fmt.Printf("Deleted host '%s' from bucket '%s' with measurement '%s'\n", h, api.Bucket, api.Measurement)
 	return nil
 }
 
