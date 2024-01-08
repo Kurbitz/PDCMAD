@@ -55,7 +55,7 @@ type CleanArgs struct {
 var simulateFlags = []cli.Flag{
 	&cli.StringFlag{
 		Name:  "duration",
-		Usage: "Duration",
+		Usage: "How long the simulation should run. Duration string.",
 		Value: "",
 		Aliases: []string{
 			"d",
@@ -63,7 +63,7 @@ var simulateFlags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:  "startat",
-		Usage: "Starting line in file",
+		Usage: "How far into the file to start the simulation. Duration string.",
 		Value: "",
 		Aliases: []string{
 			"s",
@@ -133,22 +133,64 @@ var simulateFlags = []cli.Flag{
 // All commands and flags are defined here
 var App = &cli.App{
 	Name:  "simba",
-	Usage: "Simulate metrics etc.",
+	Usage: "Simulate systems producing metrics and feed them to InfluxDB",
+	Description: "Simba is a tool for simulating systems producing metrics and feeding them to InfluxDB.\n" +
+		"Metrics are read from CSV files and inserted into InfluxDB.\n" +
+		"Anomalies can be injected into the metrics to simulate errors in the system.\n" +
+		"Simba can also be used to clean metrics from the database.\n" +
+		"See the documentation for more information.",
+	Suggest: true,
 	Authors: []*cli.Author{
 		{
-			Name: "PDC-MAD",
+			Name: "The Performance Data Collection, Monitoring and Anomaly Detection Team (PDC-MAD):",
+		},
+		{
+			Name: "Oscar Einarsson",
+		},
+		{
+			Name: "Fredrik Nygårds",
+		},
+		{
+			Name: "Gustav Kånåhols",
+		},
+		{
+			Name: "Fernando Revillas",
+		},
+		{
+			Name: "Adam Segerström",
+		},
+		{
+			Name: "Tahira Nishat",
 		},
 	},
 	EnableBashCompletion: true,
+	// Commands are defined here
+	// Add a new command by adding a new Command struct to the slice
 	Commands: []*cli.Command{
 		{
 			Name:      "fill",
-			Usage:     "Fill the database with data from file(s)",
+			Usage:     "Fill the database with data from file(s). Files must be in the specified CSV format",
 			ArgsUsage: "<file1> <file2> ...",
-			Action:    invokeFill,
+			Description: "A duration string is a string like 1d, 1h or 1m.\n" +
+				"Supported units are days (d), hours (h) and minutes (m).\n" +
+				"Examples: 1d, 2h, 30m\n" +
+				"Composite durations are not supported (e.g. 1d2h30m)",
+			Action: func(ctx *cli.Context) error {
+				// Parse the flags
+				flags, err := ParseFillFlags(ctx)
+				if err != nil {
+					return cli.Exit(err, 1)
+				}
+				// Execute the logic
+				if err := Fill(*flags); err != nil {
+					return cli.Exit(err, 1)
+				}
+				return nil
+			},
+			// Append the flags to the common simulation flags
 			Flags: append(simulateFlags, &cli.StringFlag{
 				Name:  "gap",
-				Usage: "Gap to now",
+				Usage: "The time to leave between the last metric and now for future simulations.",
 				Value: "",
 				Aliases: []string{
 					"g",
@@ -159,29 +201,56 @@ var App = &cli.App{
 			Name:      "stream",
 			Usage:     "stream data from file(s) in real time to the database",
 			ArgsUsage: "<file1> <file2> ...",
-			Action:    invokeStream,
+			Description: "A duration string is a string like 1d, 1h or 1m.\n" +
+				"Supported units are days (d), hours (h) and minutes (m).\n" +
+				"Examples: 1d, 2h, 30m\n" +
+				"Composite durations are not supported (e.g. 1d2h30m)",
+			Action: func(ctx *cli.Context) error {
+				// Parse the flags
+				flags, err := ParseStreamFlags(ctx)
+				if err != nil {
+					return cli.Exit(err, 1)
+				}
+				// Execute the logic
+				if err := Stream(*flags); err != nil {
+					return cli.Exit(err, 1)
+				}
+				return nil
+			},
+			// Append the flags to the common simulation flags
 			Flags: append(simulateFlags, &cli.IntFlag{
 				Name:  "timemultiplier",
-				Usage: "Increase insertion speed",
+				Usage: "Increase insertion speed by a factor of n. Must be >= 1. Extreme values may cause problems, user beware.",
 				Value: 1,
 				Aliases: []string{
 					"t",
 				},
 			}, &cli.BoolFlag{
 				Name:  "append",
-				Usage: "Insert from the latest metric",
+				Usage: "Append to the latest metric with the same ID. If not set, the metric will be inserted using the current (wall) time.",
 				Value: false,
 			}),
 		},
 		{
 			Name:      "clean",
-			Usage:     "Clean the database",
+			Usage:     "Clean the database of data from host(s) or all hosts.",
 			ArgsUsage: "<host1> <host2> ...",
-			Action:    invokeClean,
+			Action: func(ctx *cli.Context) error {
+				//Parse the flags
+				flags, err := ParseCleanFlags(ctx)
+				if err != nil {
+					return cli.Exit(err, 1)
+				}
+				// Execute the logic
+				if err := Clean(*flags); err != nil {
+					return cli.Exit(err, 1)
+				}
+				return nil
+			},
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "duration",
-					Usage: "from where to delete relative to current time",
+					Usage: "How far into the past to delete metrics. Duration string.",
 					Value: "",
 					Aliases: []string{
 						"d",
@@ -189,7 +258,7 @@ var App = &cli.App{
 				},
 				&cli.BoolFlag{
 					Name:  "all",
-					Usage: "delete metrics from all the hosts of the bucket",
+					Usage: "Delete metrics from all the hosts of the bucket",
 					Value: false,
 				},
 				&cli.StringFlag{
@@ -244,7 +313,7 @@ var App = &cli.App{
 				},
 				&cli.StringFlag{
 					Name:     "dbmeasurement",
-					Usage:    "InfluxDB measurement",
+					Usage:    "InfluxDB measurement. Use 'anomalies' to delete anomalies.",
 					EnvVars:  []string{"INFLUXDB_MEASUREMENT"},
 					Value:    "metrics",
 					Category: "Database",
@@ -459,45 +528,4 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 		Duration: duration,
 		Hosts:   hosts,
 	}, nil
-}
-
-// The invokeStream command reads a single file and sends them to InfluxDB in real time
-// The file is passed as an argument to the application (simba invokeStream file.csv)
-func invokeStream(ctx *cli.Context) error {
-	// Parse the flags
-	flags, err := ParseStreamFlags(ctx)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	if err := Stream(*flags); err != nil {
-		return cli.Exit(err, 1)
-	}
-
-	return nil
-}
-
-// The invokeFill command reads the files and sends them to InfluxDB
-// The files are passed as arguments to the application (simba invokeFill file1.csv file2.csv etc.)
-func invokeFill(ctx *cli.Context) error {
-	// Parse the flags
-	flags, err := ParseFillFlags(ctx)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	if err := Fill(*flags); err != nil {
-		return cli.Exit(err, 1)
-	}
-	return nil
-}
-
-func invokeClean(ctx *cli.Context) error {
-	//Parse the flags
-	flags, err := ParseCleanFlags(ctx)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	if err := Clean(*flags); err != nil {
-		return cli.Exit(err, 1)
-	}
-	return nil
 }
