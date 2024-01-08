@@ -63,7 +63,7 @@ func Fill(flags FillArgs) error {
 			// If the anomaly flag is set, inject an anomaly into the metrics
 			if len(flags.Anomaly) > 0 {
 				bar.Describe("Injecting anomaly")
-				if err := injectAnomaly(metric, flags.Anomaly); err != nil {
+				if err := InjectAnomaly(metric, flags.Anomaly); err != nil {
 					return err
 				}
 			}
@@ -133,7 +133,7 @@ func Stream(flags StreamArgs) error {
 	metrics.SliceBetween(flags.Startat, flags.Duration)
 
 	if len(flags.Anomaly) > 0 {
-		if err := injectAnomaly(metrics, flags.Anomaly); err != nil {
+		if err := InjectAnomaly(metrics, flags.Anomaly); err != nil {
 			return err
 		}
 	}

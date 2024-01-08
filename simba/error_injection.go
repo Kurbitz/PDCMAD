@@ -10,7 +10,7 @@ var AnomalyMap = map[string]func(m *system_metrics.SystemMetric) error{
 	"cpu-user-sin":  cpuUserSin,
 }
 
-func injectAnomaly(metrics *system_metrics.SystemMetric, anomalyFlag string) error {
+func InjectAnomaly(metrics *system_metrics.SystemMetric, anomalyFlag string) error {
 	if anomalyFlag == "" {
 		return nil
 	}
