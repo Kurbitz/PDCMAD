@@ -150,13 +150,8 @@ func checkEnv() {
 	log.Println("Environment variables are set!")
 }
 
-func main() {
-	log.Println("Starting Nala...")
-	pythonSmokeTest()
-	checkEnv()
-
-	router := gin.Default()
-
+// setupEndpoints sets up the API endpoints for the router.
+func setupEndpoints(router *gin.Engine) {
 	router.GET("/nala/:algorithm/:host/:duration", triggerDetection)
 
 	router.GET("/nala/test", func(ctx *gin.Context) {
@@ -172,6 +167,17 @@ func main() {
 		}
 		ctx.String(http.StatusOK, responseText)
 	})
+}
+
+func main() {
+	log.Println("Starting Nala...")
+	pythonSmokeTest()
+	checkEnv()
+
+	// Create the router and setup the endpoints
+	router := gin.Default()
+	setupEndpoints(router)
+
 
 	router.Run("0.0.0.0:8088")
 }
