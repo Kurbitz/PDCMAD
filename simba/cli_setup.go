@@ -84,7 +84,7 @@ var simulateFlags = []cli.Flag{
 		Value:    "",
 		Category: "Database",
 		Aliases: []string{
-			"t",
+			"T",
 		},
 	},
 	&cli.StringFlag{
@@ -104,7 +104,7 @@ var simulateFlags = []cli.Flag{
 		Value:    "8086",
 		Category: "Database",
 		Aliases: []string{
-			"p",
+			"P",
 		},
 	},
 	&cli.StringFlag{
@@ -114,7 +114,7 @@ var simulateFlags = []cli.Flag{
 		Value:    "pdc-mad",
 		Category: "Database",
 		Aliases: []string{
-			"o",
+			"O",
 		},
 	},
 	&cli.StringFlag{
@@ -124,7 +124,7 @@ var simulateFlags = []cli.Flag{
 		Value:    "pdc-mad",
 		Category: "Database",
 		Aliases: []string{
-			"b",
+			"B",
 		},
 	},
 }
@@ -165,7 +165,7 @@ var App = &cli.App{
 				Usage: "Increase insertion speed",
 				Value: 1,
 				Aliases: []string{
-					"m",
+					"t",
 				},
 			}, &cli.BoolFlag{
 				Name:  "append",
@@ -199,7 +199,7 @@ var App = &cli.App{
 					Value:    "",
 					Category: "Database",
 					Aliases: []string{
-						"t",
+						"T",
 					},
 				},
 				&cli.StringFlag{
@@ -219,7 +219,7 @@ var App = &cli.App{
 					Value:    "8086",
 					Category: "Database",
 					Aliases: []string{
-						"p",
+						"P",
 					},
 				},
 				&cli.StringFlag{
@@ -229,7 +229,7 @@ var App = &cli.App{
 					Value:    "pdc-mad",
 					Category: "Database",
 					Aliases: []string{
-						"o",
+						"O",
 					},
 				},
 				&cli.StringFlag{
@@ -239,7 +239,7 @@ var App = &cli.App{
 					Value:    "pdc-mad",
 					Category: "Database",
 					Aliases: []string{
-						"b",
+						"B",
 					},
 				},
 				&cli.StringFlag{
