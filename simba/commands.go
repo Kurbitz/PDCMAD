@@ -130,7 +130,7 @@ func Stream(flags StreamArgs) error {
 	}
 
 	// Modify the metrics slice based on the startat and duration parameters
-	metrics.SliceBetween(flags.Startat, flags.Duration)
+	metrics.SliceBetween(flags.StartAt, flags.Duration)
 
 	if len(flags.Anomaly) > 0 {
 		if err := InjectAnomaly(metrics, flags.Anomaly); err != nil {

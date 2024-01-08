@@ -44,7 +44,7 @@ type FillArgs struct {
 type StreamArgs struct {
 	DBArgs         DBInfo        // DBInfo struct containing the database information
 	Duration       time.Duration // Duration of the simulation
-	Startat        time.Duration // How far into the file to start the simulation
+	StartAt        time.Duration // How far into the file to start the simulation
 	TimeMultiplier int           // How much to speed up the simulation
 	Append         bool          // Whether to append to the latest metric or not
 	Anomaly        string        // Which anomaly to use (see error_injection.go)
@@ -72,7 +72,7 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:  "startat",
+		Name:  "start-at",
 		Usage: "How far into the file to start the simulation. Duration string.",
 		Value: "",
 		Aliases: []string{
@@ -89,7 +89,7 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:     "dbtoken",
+		Name:     "db-token",
 		EnvVars:  []string{"INFLUXDB_TOKEN"},
 		Usage:    "InfluxDB token",
 		Value:    "",
@@ -99,7 +99,7 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:     "dbhost",
+		Name:     "db-host",
 		EnvVars:  []string{"INFLUXDB_HOST"},
 		Usage:    "InfluxDB hostname",
 		Value:    "localhost",
@@ -109,7 +109,7 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:     "dbport",
+		Name:     "db-port",
 		EnvVars:  []string{"INFLUXDB_PORT"},
 		Usage:    "InfluxDB port",
 		Value:    "8086",
@@ -119,7 +119,7 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:     "dborg",
+		Name:     "db-org",
 		Usage:    "InfluxDB organization",
 		EnvVars:  []string{"INFLUXDB_ORG"},
 		Value:    "pdc-mad",
@@ -129,7 +129,7 @@ var simulateFlags = []cli.Flag{
 		},
 	},
 	&cli.StringFlag{
-		Name:     "dbbucket",
+		Name:     "db-bucket",
 		Usage:    "InfluxDB bucket",
 		EnvVars:  []string{"INFLUXDB_BUCKET"},
 		Value:    "pdc-mad",
@@ -231,7 +231,7 @@ var App = &cli.App{
 			},
 			// Append the flags to the common simulation flags
 			Flags: append(simulateFlags, &cli.IntFlag{
-				Name:  "timemultiplier",
+				Name:  "time-multiplier",
 				Usage: "Increase insertion speed by a factor of n. Must be >= 1. Extreme values may cause problems, user beware.",
 				Value: 1,
 				Aliases: []string{
@@ -274,7 +274,7 @@ var App = &cli.App{
 					Value: false,
 				},
 				&cli.StringFlag{
-					Name:     "dbtoken",
+					Name:     "db-token",
 					EnvVars:  []string{"INFLUXDB_TOKEN"},
 					Usage:    "InfluxDB token",
 					Value:    "",
@@ -284,7 +284,7 @@ var App = &cli.App{
 					},
 				},
 				&cli.StringFlag{
-					Name:     "dbhost",
+					Name:     "db-host",
 					EnvVars:  []string{"INFLUXDB_HOST"},
 					Usage:    "InfluxDB IP",
 					Value:    "localhost",
@@ -294,7 +294,7 @@ var App = &cli.App{
 					},
 				},
 				&cli.StringFlag{
-					Name:     "dbport",
+					Name:     "db-port",
 					EnvVars:  []string{"INFLUXDB_PORT"},
 					Usage:    "InfluxDB port",
 					Value:    "8086",
@@ -304,7 +304,7 @@ var App = &cli.App{
 					},
 				},
 				&cli.StringFlag{
-					Name:     "dborg",
+					Name:     "db-org",
 					Usage:    "InfluxDB organization",
 					EnvVars:  []string{"INFLUXDB_ORG"},
 					Value:    "pdc-mad",
@@ -314,7 +314,7 @@ var App = &cli.App{
 					},
 				},
 				&cli.StringFlag{
-					Name:     "dbbucket",
+					Name:     "db-bucket",
 					Usage:    "InfluxDB bucket",
 					EnvVars:  []string{"INFLUXDB_BUCKET"},
 					Value:    "pdc-mad",
@@ -324,7 +324,7 @@ var App = &cli.App{
 					},
 				},
 				&cli.StringFlag{
-					Name:     "dbmeasurement",
+					Name:     "db-measurement",
 					Usage:    "InfluxDB measurement. Use 'anomalies' to delete anomalies.",
 					EnvVars:  []string{"INFLUXDB_MEASUREMENT"},
 					Value:    "metrics",
@@ -423,14 +423,14 @@ func GetIdFromFileName(file string) string {
 // Returns a FillArgs struct containing the parsed flags
 // Returns an error if the flags are invalid
 func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
-	if ctx.String("dbtoken") == "" {
+	if ctx.String("db-token") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
 	duration, err := ParseDurationString(ctx.String("duration"))
 	if err != nil {
 		return nil, err
 	}
-	startAt, err := ParseDurationString(ctx.String("startat"))
+	startAt, err := ParseDurationString(ctx.String("start-at"))
 	if err != nil {
 		return nil, err
 	}
@@ -456,11 +456,11 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 
 	return &FillArgs{
 		DBArgs: DBInfo{
-			Token:       ctx.String("dbtoken"),
-			Host:        ctx.String("dbhost"),
-			Port:        ctx.String("dbport"),
-			Org:         ctx.String("dborg"),
-			Bucket:      ctx.String("dbbucket"),
+			Token:       ctx.String("db-token"),
+			Host:        ctx.String("db-host"),
+			Port:        ctx.String("db-port"),
+			Org:         ctx.String("db-org"),
+			Bucket:      ctx.String("db-bucket"),
 			Measurement: "metrics",
 		},
 		Duration: duration,
@@ -475,21 +475,21 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 // Returns a StreamArgs struct containing the parsed flags
 // Returns an error if the flags are invalid
 func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
-	if ctx.String("dbtoken") == "" {
+	if ctx.String("db-token") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
 	duration, err := ParseDurationString(ctx.String("duration"))
 	if err != nil {
 		return nil, err
 	}
-	startAt, err := ParseDurationString(ctx.String("startat"))
+	startAt, err := ParseDurationString(ctx.String("start-at"))
 	if err != nil {
 		return nil, err
 	}
 	if ctx.NArg() == 0 {
 		return nil, fmt.Errorf("missing file. See -h for help")
 	}
-	if ctx.Int("timemultiplier") < 1 {
+	if ctx.Int("time-multiplier") < 1 {
 		return nil, fmt.Errorf("timemultiplier cannot be a lower than 1")
 	}
 	anomalyString, err := checkAnomalyString(ctx.String("anomaly"))
@@ -504,16 +504,16 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 
 	return &StreamArgs{
 		DBArgs: DBInfo{
-			Token:       ctx.String("dbtoken"),
-			Host:        ctx.String("dbhost"),
-			Port:        ctx.String("dbport"),
-			Org:         ctx.String("dborg"),
-			Bucket:      ctx.String("dbbucket"),
+			Token:       ctx.String("db-token"),
+			Host:        ctx.String("db-host"),
+			Port:        ctx.String("db-port"),
+			Org:         ctx.String("db-org"),
+			Bucket:      ctx.String("db-bucket"),
 			Measurement: "metrics",
 		},
 		Duration:       duration,
-		Startat:        startAt,
-		TimeMultiplier: ctx.Int("timemultiplier"),
+		StartAt:        startAt,
+		TimeMultiplier: ctx.Int("time-multiplier"),
 		Append:         ctx.Bool("append"),
 		Anomaly:        anomalyString,
 		File:           file,
@@ -526,14 +526,14 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	var duration time.Duration
 	var err error
-	if ctx.String("dbtoken") == "" {
+	if ctx.String("db-token") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
 
-	if ctx.String("startat") == "" {
+	if ctx.String("start-at") == "" {
 		duration = time.Now().Local().Sub(time.Unix(0, 0))
 	} else {
-		duration, err = ParseDurationString(ctx.String("startat"))
+		duration, err = ParseDurationString(ctx.String("start-at"))
 		if err != nil {
 			return nil, err
 		}
@@ -547,12 +547,12 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 
 	return &CleanArgs{
 		DBArgs: DBInfo{
-			Token:       ctx.String("dbtoken"),
-			Host:        ctx.String("dbhost"),
-			Port:        ctx.String("dbport"),
-			Org:         ctx.String("dborg"),
-			Bucket:      ctx.String("dbbucket"),
-			Measurement: ctx.String("dbmeasurement"),
+			Token:       ctx.String("db-token"),
+			Host:        ctx.String("db-host"),
+			Port:        ctx.String("db-port"),
+			Org:         ctx.String("db-org"),
+			Bucket:      ctx.String("db-bucket"),
+			Measurement: ctx.String("db-measurement"),
 		},
 		All:      ctx.Bool("all"),
 		Duration: duration,
