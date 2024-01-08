@@ -110,7 +110,10 @@ func Stream(flags StreamArgs) error {
 			log.Println("You have exceeded the current time. The time multiplier might be too high, exiting...")
 			return nil
 		}
-		influxDBApi.WriteMetric(*metric, id, insertTime)
+		err := influxDBApi.WriteMetric(*metric, id, insertTime)
+		if err != nil {
+			return err
+		}
 		log.Printf("%v: metric written at %v\n", id, insertTime.Format(time.RFC3339))
 
 		timeDelta = (metrics.Metrics[i+1].Timestamp - metric.Timestamp)
