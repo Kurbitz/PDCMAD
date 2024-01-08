@@ -129,83 +129,6 @@ var simulateFlags = []cli.Flag{
 	},
 }
 
-// Flags for the clean command
-var cleanFlags = []cli.Flag{
-	&cli.StringFlag{
-		Name:  "duration",
-		Usage: "from where to delete relative to current time",
-		Value: "",
-		Aliases: []string{
-			"d",
-		},
-	},
-	&cli.BoolFlag{
-		Name:  "all",
-		Usage: "delete metrics from all the hosts of the bucket",
-		Value: false,
-	},
-	&cli.StringFlag{
-		Name:     "dbtoken",
-		EnvVars:  []string{"INFLUXDB_TOKEN"},
-		Usage:    "InfluxDB token",
-		Value:    "",
-		Category: "Database",
-		Aliases: []string{
-			"t",
-		},
-	},
-	&cli.StringFlag{
-		Name:     "dbhost",
-		EnvVars:  []string{"INFLUXDB_HOST"},
-		Usage:    "InfluxDB IP",
-		Value:    "localhost",
-		Category: "Database",
-		Aliases: []string{
-			"H",
-		},
-	},
-	&cli.StringFlag{
-		Name:     "dbport",
-		EnvVars:  []string{"INFLUXDB_PORT"},
-		Usage:    "InfluxDB port",
-		Value:    "8086",
-		Category: "Database",
-		Aliases: []string{
-			"p",
-		},
-	},
-	&cli.StringFlag{
-		Name:     "dborg",
-		Usage:    "InfluxDB organization",
-		EnvVars:  []string{"INFLUXDB_ORG"},
-		Value:    "pdc-mad",
-		Category: "Database",
-		Aliases: []string{
-			"o",
-		},
-	},
-	&cli.StringFlag{
-		Name:     "dbbucket",
-		Usage:    "InfluxDB bucket",
-		EnvVars:  []string{"INFLUXDB_BUCKET"},
-		Value:    "pdc-mad",
-		Category: "Database",
-		Aliases: []string{
-			"b",
-		},
-	},
-	&cli.StringFlag{
-		Name:     "dbmeasurement",
-		Usage:    "InfluxDB measurement",
-		EnvVars:  []string{"INFLUXDB_MEASUREMENT"},
-		Value:    "metrics",
-		Category: "Database",
-		Aliases: []string{
-			"M",
-		},
-	},
-}
-
 // App is the main application
 // All commands and flags are defined here
 var App = &cli.App{
@@ -255,7 +178,81 @@ var App = &cli.App{
 			Usage:     "Clean the database",
 			ArgsUsage: "<host1> <host2> ...",
 			Action:    invokeClean,
-			Flags:     cleanFlags,
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "duration",
+					Usage: "from where to delete relative to current time",
+					Value: "",
+					Aliases: []string{
+						"d",
+					},
+				},
+				&cli.BoolFlag{
+					Name:  "all",
+					Usage: "delete metrics from all the hosts of the bucket",
+					Value: false,
+				},
+				&cli.StringFlag{
+					Name:     "dbtoken",
+					EnvVars:  []string{"INFLUXDB_TOKEN"},
+					Usage:    "InfluxDB token",
+					Value:    "",
+					Category: "Database",
+					Aliases: []string{
+						"t",
+					},
+				},
+				&cli.StringFlag{
+					Name:     "dbhost",
+					EnvVars:  []string{"INFLUXDB_HOST"},
+					Usage:    "InfluxDB IP",
+					Value:    "localhost",
+					Category: "Database",
+					Aliases: []string{
+						"H",
+					},
+				},
+				&cli.StringFlag{
+					Name:     "dbport",
+					EnvVars:  []string{"INFLUXDB_PORT"},
+					Usage:    "InfluxDB port",
+					Value:    "8086",
+					Category: "Database",
+					Aliases: []string{
+						"p",
+					},
+				},
+				&cli.StringFlag{
+					Name:     "dborg",
+					Usage:    "InfluxDB organization",
+					EnvVars:  []string{"INFLUXDB_ORG"},
+					Value:    "pdc-mad",
+					Category: "Database",
+					Aliases: []string{
+						"o",
+					},
+				},
+				&cli.StringFlag{
+					Name:     "dbbucket",
+					Usage:    "InfluxDB bucket",
+					EnvVars:  []string{"INFLUXDB_BUCKET"},
+					Value:    "pdc-mad",
+					Category: "Database",
+					Aliases: []string{
+						"b",
+					},
+				},
+				&cli.StringFlag{
+					Name:     "dbmeasurement",
+					Usage:    "InfluxDB measurement",
+					EnvVars:  []string{"INFLUXDB_MEASUREMENT"},
+					Value:    "metrics",
+					Category: "Database",
+					Aliases: []string{
+						"M",
+					},
+				},
+			},
 		},
 	},
 }
