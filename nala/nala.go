@@ -18,8 +18,6 @@ var inProgress = false
 
 func triggerDetection(ctx *gin.Context) {
 	log.Println("Anomaly detection request received!")
-	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "metrics")
-	defer dbapi.Close()
 	algorithm := ctx.Param("algorithm")
 	host := ctx.Param("host")
 	duration := ctx.Param("duration")
@@ -48,6 +46,9 @@ func triggerDetection(ctx *gin.Context) {
 	inProgress = true
 
 	log.Printf("Starting anomaly detection for %v\n", host)
+	// Create the influxdb api
+	dbapi := influxdbapi.NewInfluxDBApi(os.Getenv("INFLUXDB_TOKEN"), os.Getenv("INFLUXDB_HOST"), os.Getenv("INFLUXDB_PORT"), os.Getenv("INFLUXDB_ORG"), os.Getenv("INFLUXDB_BUCKET"), "metrics")
+	defer dbapi.Close()
 	parameters, err := NewAnomalyDetection(dbapi, host, duration)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, "%v", err)
