@@ -114,7 +114,7 @@ func logAnomalies(filePath string, host string, algorithm string, data []system_
 		}
 	}
 
-	outputFile, err := os.Create(filePath)
+	outputFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("Error when creating file: %v", err)
 		return err
