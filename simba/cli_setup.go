@@ -47,7 +47,7 @@ type StreamArgs struct {
 type CleanArgs struct {
 	DBArgs  DBInfo
 	All     bool
-	Startat time.Duration
+	Duration time.Duration
 	Hosts   []string
 }
 
@@ -132,11 +132,11 @@ var simulateFlags = []cli.Flag{
 // Flags for the clean command
 var cleanFlags = []cli.Flag{
 	&cli.StringFlag{
-		Name:  "startat",
+		Name:  "duration",
 		Usage: "from where to delete relative to current time",
 		Value: "",
 		Aliases: []string{
-			"s",
+			"d",
 		},
 	},
 	&cli.BoolFlag{
@@ -428,16 +428,16 @@ func GetIdFromFileName(file string) string {
 }
 
 func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
-	var startAt time.Duration
+	var duration time.Duration
 	var err error
 	if ctx.String("dbtoken") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
 
 	if ctx.String("startat") == "" {
-		startAt = time.Now().Local().Sub(time.Unix(0, 0))
+		duration = time.Now().Local().Sub(time.Unix(0, 0))
 	} else {
-		startAt, err = ParseDurationString(ctx.String("startat"))
+		duration, err = ParseDurationString(ctx.String("startat"))
 		if err != nil {
 			return nil, err
 		}
@@ -459,7 +459,7 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 			Measurement: ctx.String("dbmeasurement"),
 		},
 		All:     ctx.Bool("all"),
-		Startat: startAt,
+		Duration: duration,
 		Hosts:   hosts,
 	}, nil
 }

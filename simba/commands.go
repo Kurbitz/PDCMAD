@@ -131,7 +131,7 @@ func Clean(flags CleanArgs) error {
 	defer influxDBApi.Close()
 
 	if flags.All { // Clean the bucket
-		return influxDBApi.DeleteBucket(flags.Startat)
+		return influxDBApi.DeleteBucket(flags.Duration)
 	}
 
 	var wg sync.WaitGroup
@@ -139,7 +139,7 @@ func Clean(flags CleanArgs) error {
 		wg.Add(1)
 		go func(hostName string) {
 			defer wg.Done()
-			influxDBApi.DeleteHost(hostName, flags.Startat)
+			influxDBApi.DeleteHost(hostName, flags.Duration)
 		}(host)
 	}
 	wg.Wait()
