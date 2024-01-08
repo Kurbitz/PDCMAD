@@ -391,6 +391,13 @@ func ValidateFile(file string) error {
 	return nil
 }
 
+// GetIdFromFileName returns the ID of a metric from the file name
+// The ID is the base file name without the extension
+func GetIdFromFileName(file string) string {
+	// Remove the file extension from the base file name
+	return filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
+
+}
 func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if ctx.String("dbtoken") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
@@ -486,12 +493,7 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	}, nil
 }
 
-// FIXME: Use better ID
-func GetIdFromFileName(file string) string {
-	// Remove the file extension from the base file name
-	return filepath.Base(file)[:len(filepath.Base(file))-len(filepath.Ext(file))]
 
-}
 
 func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	var duration time.Duration
