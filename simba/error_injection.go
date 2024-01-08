@@ -6,8 +6,8 @@ import (
 )
 
 var AnomalyMap = map[string]func(m *system_metrics.SystemMetric) error{
-	"a1": anomaly1,
-	"a2": anomaly2,
+	"cpu-user-high": cpuUserHigh,
+	"cpu-user-sin":  cpuUserSin,
 }
 
 func injectAnomaly(metrics *system_metrics.SystemMetric, anomalyFlag string) error {
@@ -23,7 +23,7 @@ func injectAnomaly(metrics *system_metrics.SystemMetric, anomalyFlag string) err
 }
 
 // Basic example anomaly. Sets Cpu_User to 1
-func anomaly1(metrics *system_metrics.SystemMetric) error {
+func cpuUserHigh(metrics *system_metrics.SystemMetric) error {
 	for _, m := range metrics.Metrics {
 		m.Cpu_User = 1
 	}
@@ -32,7 +32,7 @@ func anomaly1(metrics *system_metrics.SystemMetric) error {
 }
 
 // Changes Cpu_User to a timestamp based sine
-func anomaly2(metrics *system_metrics.SystemMetric) error {
+func cpuUserSin(metrics *system_metrics.SystemMetric) error {
 	for _, m := range metrics.Metrics {
 		m.Cpu_User = math.Abs(math.Sin(float64(m.Timestamp / 10)))
 	}

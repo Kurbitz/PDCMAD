@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/maps"
 )
 
 type DBInfo struct {
@@ -69,7 +71,7 @@ var simulateFlags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:  "anomaly",
-		Usage: "Select which type of anomaly to use",
+		Usage: "Select which type of anomaly to use. Available: " + strings.Join(maps.Keys(AnomalyMap), ", "),
 		Value: "",
 		Aliases: []string{
 			"a",
