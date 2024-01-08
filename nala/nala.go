@@ -25,23 +25,23 @@ func triggerDetection(ctx *gin.Context) {
 	duration := ctx.Param("duration")
 	//These checks might be in simba instead?
 	if host == "" {
-		ctx.String(http.StatusOK, "Host field is empty")
+		ctx.String(http.StatusBadRequest, "Host field is empty")
 		log.Println("Host field is empty")
 		return
 	}
 	if duration == "" {
-		ctx.String(http.StatusOK, "Duration field is empty")
+		ctx.String(http.StatusBadRequest, "Duration field is empty")
 		log.Println("Duration field is empty")
 		return
 	}
 	if inProgress {
-		ctx.String(http.StatusOK, "Anomaly detection is already in progress")
+		ctx.String(http.StatusConflict, "Anomaly detection is already in progress")
 		log.Println("Anomaly detection is already in progress")
 		return
 	}
 	detection, exists := supportedAlgorithms[algorithm]
 	if !exists {
-		ctx.String(http.StatusOK, "Algorithm %v is not supported", algorithm)
+		ctx.String(http.StatusBadRequest, "Algorithm %v is not supported", algorithm)
 		log.Printf("Algorithm %v is not supported", algorithm)
 		return
 	}
@@ -50,7 +50,7 @@ func triggerDetection(ctx *gin.Context) {
 	log.Printf("Starting anomaly detection for %v\n", host)
 	parameters, err := NewAnomalyDetection(dbapi, host, duration)
 	if err != nil {
-		ctx.String(http.StatusOK, "%v", err)
+		ctx.String(http.StatusInternalServerError, "%v", err)
 		inProgress = false
 		return
 	}
