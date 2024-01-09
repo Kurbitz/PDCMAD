@@ -41,7 +41,7 @@ func triggerDetection(ctx *gin.Context) {
 	}
 
 	// Check if the algorithm is supported by looking it up in the supportedAlgorithms map
-	detection, exists := supportedAlgorithms[algorithm]
+	detection, exists := SupportedAlgorithms[algorithm]
 	if !exists {
 		ctx.String(http.StatusBadRequest, "Algorithm %v is not supported", algorithm)
 		log.Printf("Algorithm %v is not supported", algorithm)

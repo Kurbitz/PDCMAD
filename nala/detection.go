@@ -12,7 +12,7 @@ type AnomalyDetectionParameters struct {
 	Data system_metrics.SystemMetric
 }
 
-var supportedAlgorithms = map[string]func(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error){
+var SupportedAlgorithms = map[string]func(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error){
 	"IF": isolationForest,
 }
 
