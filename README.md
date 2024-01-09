@@ -165,7 +165,8 @@ curl localhost:8088/test
 ```
 
 ## Environment Variables
-List of variables
+### Docker
+List of variables .env
 ```
 INFLUXDB_ADMIN_USER
 INFLUXDB_ADMIN_PASSWORD
@@ -188,6 +189,9 @@ NALA_PORT
 - `INFLUXDB_PORT` Default value of exposed port
 - `GRAFANA_PORT` Default value of exposed port
 - `NALA_PORT` Default value of exposed port
+
+### Simba
+Simba uses either a token provided with `--db-token` or an exported environment variable named `INFLUXDB_TOKEN`. These can be created in InfluxDB for each user separately.
 
 ## Help
 Simba has help arguments (`-h`) for each subcommand.
