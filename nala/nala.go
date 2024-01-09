@@ -59,7 +59,7 @@ func triggerDetection(ctx *gin.Context) {
 	// Create the parameters for the anomaly detection
 	// This is done here so that we can return an error if the parameters are invalid
 	// The data from the databse will be fetched here
-	parameters, err := NewAnomalyDetection(dbapi, host, duration)
+	parameters, err := NewAnomalyDetectionParameters(dbapi, host, duration)
 	if err != nil {
 		ctx.String(http.StatusInternalServerError, "%v", err)
 		inProgress = false
