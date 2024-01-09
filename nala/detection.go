@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"internal/influxdbapi"
 	"internal/system_metrics"
 	"log"
 	"os"
 	"os/exec"
-
-	"github.com/gocarina/gocsv"
 )
 
 type AnomalyDetectionParameters struct {
