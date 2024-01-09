@@ -107,11 +107,15 @@ Simulate at 20 times the speed
 simba stream --time-multiplier 20 foo.csv
 ```
 #### Clean
+Remove data from host `foo`
+```shell
+simba clean foo
+```
 Remove data for all host on specified [INFLUXDB_BUCKET](#environment-variables)
 ```shell
 simba clean --all
 ```
-Remove last 1h of data
+Remove last `1h` of data
 ```shell
 simba clean --duration 1h
 ```
@@ -152,6 +156,11 @@ curl HOSTNAME:PORT/[ALGORITHM]/[SYSTEM-NAME]/[DURATION]
 Trigger **I**solation **F**orest on `foo` with `36h` of data
 ```shell
 curl localhost:8088/IF/foo/36h
+```
+#### Supported algorithms
+Check which algorithms nala supports right now.
+```shell
+curl localhost:8088/supported
 ```
 #### Status
 Check on status of anomaly detection. If it is done or not. This response can be used for automated anomaly detection.
