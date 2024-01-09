@@ -29,8 +29,8 @@ func triggerDetection(ctx *gin.Context) {
 		log.Println("Host field is empty")
 		return
 	}
-	if duration == "" {
-		ctx.String(http.StatusBadRequest, "Duration field is empty")
+	if d, err := influxdbapi.ParseDurationString(duration); err != nil || d == 0 {
+		ctx.String(http.StatusBadRequest, "Duration field is invalid")
 		log.Println("Duration field is empty")
 		return
 	}

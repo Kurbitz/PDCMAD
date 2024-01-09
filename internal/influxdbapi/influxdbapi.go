@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"internal/system_metrics"
 	"log"
+	"regexp"
+	"strconv"
 	"time"
 
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -281,4 +283,41 @@ func (api InfluxDBApi) WriteAnomalies(anomalies []system_metrics.AnomalyDetectio
 	writeAPI.Flush()
 	// FIXME: Handle errors that might occur when writing asynchronously
 	return nil
+}
+
+// ParseDurationString parses a string like 1d, 1h or 1m and returns a time.Duration
+// Supports days, hours and minutes (d, h, m)
+// Does not return an error if the string is empty, instead it returns 0. This is to allow for default values.
+func ParseDurationString(ds string) (time.Duration, error) {
+	if ds == "" {
+		return 0, nil
+	}
+	// Regex to match the duration string
+	// Captures the amount and the unit in different groups
+	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
+
+	// Find the matches
+	match := r.FindStringSubmatch(ds)
+	if len(match) == 0 {
+		return 0, fmt.Errorf("invalid time string: %s", ds)
+	}
+
+	// Convert the amount to an int
+	amount, err := strconv.Atoi(match[1])
+	if err != nil {
+		return 0, fmt.Errorf("invalid time string: %s", ds)
+	}
+
+	// Return the duration based on the unit
+	switch match[2] {
+	case "d":
+		return ((time.Hour * 24) * time.Duration(amount)), nil
+	case "h":
+		return ((time.Hour) * time.Duration(amount)), nil
+	case "m":
+		return (time.Minute * time.Duration(amount)), nil
+
+	}
+
+	return 0, fmt.Errorf("invalid time string: %s", ds)
 }

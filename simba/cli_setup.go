@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	"internal/influxdbapi"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -338,43 +337,6 @@ var App = &cli.App{
 	},
 }
 
-// ParseDurationString parses a string like 1d, 1h or 1m and returns a time.Duration
-// Supports days, hours and minutes (d, h, m)
-// Does not return an error if the string is empty, instead it returns 0. This is to allow for default values.
-func ParseDurationString(ds string) (time.Duration, error) {
-	if ds == "" {
-		return 0, nil
-	}
-	// Regex to match the duration string
-	// Captures the amount and the unit in different groups
-	r := regexp.MustCompile("^([0-9]+)(d|h|m)$")
-
-	// Find the matches
-	match := r.FindStringSubmatch(ds)
-	if len(match) == 0 {
-		return 0, fmt.Errorf("invalid time string: %s", ds)
-	}
-
-	// Convert the amount to an int
-	amount, err := strconv.Atoi(match[1])
-	if err != nil {
-		return 0, fmt.Errorf("invalid time string: %s", ds)
-	}
-
-	// Return the duration based on the unit
-	switch match[2] {
-	case "d":
-		return ((time.Hour * 24) * time.Duration(amount)), nil
-	case "h":
-		return ((time.Hour) * time.Duration(amount)), nil
-	case "m":
-		return (time.Minute * time.Duration(amount)), nil
-
-	}
-
-	return 0, fmt.Errorf("invalid time string: %s", ds)
-}
-
 // checkANomalyString checks if the anomalyString given exists in the AnomalyMap
 // If it does not exist, it returns an error
 func checkAnomalyString(anomalyString string) (string, error) {
@@ -426,15 +388,15 @@ func ParseFillFlags(ctx *cli.Context) (*FillArgs, error) {
 	if ctx.String("db-token") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
-	duration, err := ParseDurationString(ctx.String("duration"))
+	duration, err := influxdbapi.ParseDurationString(ctx.String("duration"))
 	if err != nil {
 		return nil, err
 	}
-	startAt, err := ParseDurationString(ctx.String("start-at"))
+	startAt, err := influxdbapi.ParseDurationString(ctx.String("start-at"))
 	if err != nil {
 		return nil, err
 	}
-	gap, err := ParseDurationString(ctx.String("gap"))
+	gap, err := influxdbapi.ParseDurationString(ctx.String("gap"))
 	if err != nil {
 		return nil, err
 	}
@@ -478,11 +440,11 @@ func ParseStreamFlags(ctx *cli.Context) (*StreamArgs, error) {
 	if ctx.String("db-token") == "" {
 		return nil, fmt.Errorf("missing InfluxDB token. See -h for help")
 	}
-	duration, err := ParseDurationString(ctx.String("duration"))
+	duration, err := influxdbapi.ParseDurationString(ctx.String("duration"))
 	if err != nil {
 		return nil, err
 	}
-	startAt, err := ParseDurationString(ctx.String("start-at"))
+	startAt, err := influxdbapi.ParseDurationString(ctx.String("start-at"))
 	if err != nil {
 		return nil, err
 	}
@@ -533,7 +495,7 @@ func ParseCleanFlags(ctx *cli.Context) (*CleanArgs, error) {
 	if ctx.String("start-at") == "" {
 		duration = time.Now().Local().Sub(time.Unix(0, 0))
 	} else {
-		duration, err = ParseDurationString(ctx.String("start-at"))
+		duration, err = influxdbapi.ParseDurationString(ctx.String("start-at"))
 		if err != nil {
 			return nil, err
 		}
