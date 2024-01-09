@@ -8,8 +8,10 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"strings"
 
 	"github.com/gocarina/gocsv"
+	"golang.org/x/exp/maps"
 
 	"github.com/gin-gonic/gin"
 )
@@ -190,8 +192,9 @@ func setupEndpoints(router *gin.Engine) {
 	router.GET("/nala/test", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Nala is working!")
 	})
-	router.GET("/nala/algorithms", func(ctx *gin.Context) {
-		strings.Join(maps.Keys(SupportedAlgorithms), ", ")
+	// Lists all the supported algorithms by looking them up in the supportedAlgorithms map
+	router.GET("/algorithms", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, strings.Join(maps.Keys(SupportedAlgorithms), ", "))
 	})
 	router.GET("/nala/status", func(ctx *gin.Context) {
 		responseText := ""
