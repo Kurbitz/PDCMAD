@@ -1,0 +1,13 @@
+---
+apiVersion: 1
+datasources:
+  - access: proxy
+    jsonData:
+      dbName: ${INFLUXDB_BUCKET}
+      httpHeaderName1: Authorization
+      httpMode: GET
+    name: InfluxDB_v2_InfluxQL
+    secureJsonData:
+      httpHeaderValue1: Token ${INFLUXDB_TOKEN}
+    type: influxdb
+    url: ${INFLUXDB_URL}

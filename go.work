@@ -1,6 +1,6 @@
 go 1.20
 
 use (
-	./simulator/src/metrics
-	./simulator/src/simba
+	./simba
+	./nala
 )
