@@ -214,6 +214,26 @@ func (sm *SystemMetric) SliceBetween(startAt, duration time.Duration) {
 	sm.Metrics = sm.Metrics[startIndex : startIndex+endIndex]
 }
 
+// WriteToFile writes a SystemMetric struct to a CSV file.
+// The CSV file will have the same format as the dataset provided by Westermo.
+// Will overwrite the file if it already exists.
+// The Id field of the SystemMetric struct is not used currently.
+// Returns an error if something fails.
+func (sm SystemMetric) WriteToFile(filePath string) error {
+	outputFile, err := os.Create(filePath)
+	if err != nil {
+		log.Printf("Error when creating file: %v", err)
+		return err
+	}
+	defer outputFile.Close()
+	err = gocsv.MarshalFile(&sm.Metrics, outputFile)
+	if err != nil {
+		log.Printf("Error while parsing metrics from file: %v", err)
+		return err
+	}
+	return nil
+}
+
 // ReadFromFile reads a CSV file of metrics and returns a SystemMetric struct.
 // The CSV file should have the same format as the dataset provided by Westermo.
 // Returns an error if something fails.

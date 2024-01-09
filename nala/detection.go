@@ -37,13 +37,12 @@ func NewAnomalyDetection(dbapi influxdbapi.InfluxDBApi, host string, duration st
 func isolationForest(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error) {
 	log.Println("Starting anomaly detection with Isolation Forest")
 
-	inputFilePath := "go_output.csv"
-	outputFilePath := "py_output.csv"
-	//Sets Arguments to the command
-
+	inputFilePath := "/tmp/input.csv"
+	outputFilePath := "/tmp/output.csv"
 	log.Println("Writing data to file")
+
 	// Write data to file
-	if err := writeDataToFile(inputFilePath, ad.Data); err != nil {
+	if err := ad.Data.WriteToFile(inputFilePath); err != nil {
 		log.Printf("Error when writing data to file: %v", err)
 		return nil, err
 	}
@@ -64,19 +63,4 @@ func isolationForest(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyD
 	}
 	log.Println("Isoaltion Forest anomaly detection done!")
 	return anomalies, nil
-}
-
-func writeDataToFile(filePath string, data system_metrics.SystemMetric) error {
-	outputFile, err := os.Create(filePath)
-	if err != nil {
-		log.Printf("Error when creating file: %v", err)
-		return err
-	}
-	defer outputFile.Close()
-	err = gocsv.MarshalFile(&data.Metrics, outputFile)
-	if err != nil {
-		log.Printf("Error while parsing metrics from file: %v", err)
-		return err
-	}
-	return nil
 }
