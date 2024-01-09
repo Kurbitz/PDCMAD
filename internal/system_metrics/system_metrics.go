@@ -1,6 +1,7 @@
 package system_metrics
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -234,4 +235,26 @@ func ReadFromFile(filePath string, id string) (*SystemMetric, error) {
 	var systemMetrics = SystemMetric{Id: id, Metrics: metrics}
 
 	return &systemMetrics, nil
+}
+
+// ParseAnomalyDetectionOutputCSV parses a CSV file of AnomalyDetectionOutput structs and returns a slice of AnomalyDetectionOutput structs.
+// The CSV file should have the same format as the AnomalyDetectionOutput struct.
+// Returns an error if something fails.
+func ParseAnomalyDetectionOutputCSV(filename, host string) (*[]AnomalyDetectionOutput, error) {
+	anomalyData := []AnomalyDetectionOutput{}
+	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		log.Printf("Error when opening file: %v", err)
+		return nil, err
+	}
+	defer inputFile.Close()
+	if err = gocsv.UnmarshalFile(inputFile, &anomalyData); err != nil {
+		log.Printf("Error when parsing anomaly detection csv: '%v'", err)
+		return nil, err
+	}
+	if len(anomalyData) == 0 {
+		return nil, fmt.Errorf("output of anomaly detection is empty")
+	}
+
+	return &anomalyData, nil
 }

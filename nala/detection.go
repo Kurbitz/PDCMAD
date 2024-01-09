@@ -57,37 +57,13 @@ func isolationForest(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyD
 		return nil, err
 	}
 	log.Println("Scipt finished executing, parsing output")
-	anomalies, err := parseIFOutput(outputFilePath, ad.Data.Id)
+	anomalies, err := system_metrics.ParseAnomalyDetectionOutputCSV(outputFilePath, ad.Data.Id)
 	if err != nil {
 		log.Printf("Error when transforming output: %v", err)
 		return nil, err
 	}
 	log.Println("Isoaltion Forest anomaly detection done!")
 	return anomalies, nil
-}
-
-/*
-Reads from anomaly detection output file and transforms data to anomalym struct
-Returns Anomalystruct
-Returns error if something fails
-*/
-func parseIFOutput(filename, host string) (*[]system_metrics.AnomalyDetectionOutput, error) {
-	anomalyData := []system_metrics.AnomalyDetectionOutput{}
-	inputFile, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		log.Printf("Error when opening file: %v", err)
-		return nil, err
-	}
-	defer inputFile.Close()
-	if err = gocsv.UnmarshalFile(inputFile, &anomalyData); err != nil {
-		log.Printf("Error when parsing anomaly detection csv: '%v'", err)
-		return nil, err
-	}
-	if len(anomalyData) == 0 {
-		return nil, fmt.Errorf("output of anomaly detection is empty")
-	}
-
-	return &anomalyData, nil
 }
 
 func writeDataToFile(filePath string, data system_metrics.SystemMetric) error {
