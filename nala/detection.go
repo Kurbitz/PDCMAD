@@ -12,8 +12,7 @@ import (
 )
 
 type AnomalyDetectionParameters struct {
-	Duration string
-	Data     system_metrics.SystemMetric
+	Data system_metrics.SystemMetric
 }
 
 var supportedAlgorithms = map[string]func(ad *AnomalyDetectionParameters) (*[]system_metrics.AnomalyDetectionOutput, error){
@@ -29,8 +28,7 @@ func NewAnomalyDetectionParameters(dbapi influxdbapi.InfluxDBApi, host string, d
 	}
 	log.Println("Metrics received from influxdb")
 	return &AnomalyDetectionParameters{
-		Duration: duration,
-		Data:     data,
+		Data: data,
 	}, nil
 }
 
