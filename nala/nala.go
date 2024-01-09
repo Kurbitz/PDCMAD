@@ -8,8 +8,10 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"strings"
 
 	"github.com/gocarina/gocsv"
+	"golang.org/x/exp/maps"
 
 	"github.com/gin-gonic/gin"
 )
@@ -185,13 +187,16 @@ func checkEnv() {
 
 // setupEndpoints sets up the API endpoints for the router.
 func setupEndpoints(router *gin.Engine) {
-	router.GET("/nala/:algorithm/:host/:duration", triggerDetection)
+	router.GET("/trigger/:algorithm/:host/:duration", triggerDetection)
 
-	router.GET("/nala/test", func(ctx *gin.Context) {
+	router.GET("/test", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Nala is working!")
 	})
-
-	router.GET("/nala/status", func(ctx *gin.Context) {
+	// Lists all the supported algorithms by looking them up in the supportedAlgorithms map
+	router.GET("/algorithms", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, strings.Join(maps.Keys(SupportedAlgorithms), ", "))
+	})
+	router.GET("/status", func(ctx *gin.Context) {
 		responseText := ""
 		if inProgress {
 			responseText = "Anomaly detection in progress"
