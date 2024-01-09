@@ -382,10 +382,6 @@
                             {
                                 "color": "green",
                                 "value": null
-                            },
-                            {
-                                "color": "red",
-                                "value": 80
                             }
                         ]
                     }
@@ -480,6 +476,13 @@
                                 "anomalies.sys-thermal"
                             ]
                         }
+                    }
+                },
+                {
+                    "id": "renameByRegex",
+                    "options": {
+                        "regex": "(.*)\\.(.*)",
+                        "renamePattern": "$2"
                     }
                 }
             ],
