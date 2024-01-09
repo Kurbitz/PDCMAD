@@ -21,4 +21,15 @@ In case of organization not being found: input the organization name on line 25 
 
 If everything is done correctly then you should have data in your local InfluxDB under the "Data Explorer" tab.
 
-**Happy hunting**
+#### Common arguments
+* start-at: how far into the file given Simba should start the reading.
+* duration: from the starting point how much of the data should be written in time string eg. 5d for 5 days worth of data.
+* anomaly: given predefined anomaly injection algorithm, inject anomalous data instead of raw data.
+#### Fill
+Filling the database from given data or injected anomalies. The data simulated can be specified with the common arguments as well as:
+* gap: how much time should be left between the last inserted datapoint and now.
+
+#### Stream
+Simulate a running server by sending data every 30 seconds. Besides the common arguments there are:
+* time-multiplier: an int which multiplies the base 30s time interval to run `n` times faster.
+* append: if you want to simulate from the latest datapoint of given system. If this is used the given system needs have data in the database already.

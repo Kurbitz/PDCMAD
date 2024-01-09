@@ -33,7 +33,7 @@ go install .
 ```
 In case of issues when installing the go program please read Go's [documentation](https://go.dev/doc/tutorial/compile-install).
 
-
+#### Checking installation
 Now everything should be set up. You can try if everything is properly installed and running with the checks below.
 
 Grafana and InfluxDB is checked by going to browser and see if the service is up.
@@ -54,13 +54,92 @@ curl localhost:8088/status
 If all these commands works you have successfully installed PDC-MAD!
 
 
-### Usage
+## Services
+#### InfluxDB
+Accessed with (by default) `localhost:8086` you can log in and administer users, buckets and also test queries when developing further.
+#### Grafana
+The docker stack comes with preset datapoints and dashboards that you can use or otherwise set up your own inside of Grafana. Access to the service is by default `localhost:3000`.
+## Usage
+### Simba
+There are four base subcommands in Simba. These can be combined and used in different ways to fulfill more complex functionality.
 
-* How to run the program
-* Step-by-step bullets
+#### Fill
+With a whole file
+```shell
+simba fill foo.csv
 ```
-code blocks for commands
+Specific duration
+```shell
+simba fill --duration 5d foo.csv
 ```
+Specific part
+```shell
+simba fill --start-at 3d --duration 1d foo.csv
+```
+Leave room for more data
+```shell
+simba fill --duration 5d --gap 3d foo.csv
+```
+Inject anomalous data
+```shell
+simba fill --duration 1h --anomaly cpu-user-high foo.csv
+```
+#### Stream
+Start a real-time server simulation
+```shell
+simba stream foo.csv
+```
+Append real-time data to foo
+```shell
+simba stream --append foo.csv
+```
+Inject anomalies real-time
+```shell
+simba stream --anomaly cpu-user-sin foo.csv
+```
+Specific part
+```shell
+simba stream --start-at 3d --duration 25m foo.csv
+```
+Simulate at 20 times the speed
+```shell
+simba stream --time-multiplier 20 foo.csv
+```
+#### Clean
+Remove data for all host on specified [INFLUXDB_BUCKET](#environment-variables)
+```shell
+simba clean --all
+```
+Remove last 1h of data
+```shell
+simba clean --duration 1h
+```
+Remove whole measurements
+```shell
+simba clean --all -M anomalies
+```
+#### Combinations
+As the append argument is not available for Fill you have to shift the data with gap and calculate the next starting point and gap.
+
+Simulate five days with one day of anomalous data
+```shell
+simba fill --duration 2d --gap 5d foo.csv;
+simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo.csv;
+simba fill --start-at 2d --duration 2d foo.csv
+```
+Simulate three days of data and start real-time simulation
+```shell
+simba fill --duration 3d foo.csv;
+simba stream --start-at 3d --append foo.csv
+```
+Simulate ten days of data taken from multiple datasets
+```shell
+simba fill --duration 2d --gap 10d foo1.csv;
+simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo.csv;
+simba fill --start-at 2d --duration 2d foo.csv
+```
+
+### Nala
 
 ## Environment Variables
 
@@ -71,9 +150,6 @@ Any advise for common problems or issues.
 command to run if program contains helper info
 ```
 
+## Dataset
+
 ## Authors
-
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
