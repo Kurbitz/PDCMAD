@@ -174,8 +174,6 @@ INFLUXDB_BUCKET
 INFLUXDB_ADMIN_TOKEN
 GRAFANA_ADMIN_USER
 GRAFANA_ADMIN_PASSWORD
-GRAFANA_ANONYMOUS_USER
-GRAFANA_ANONYMOUS_PASSWORD
 INFLUXDB_PORT
 GRAFANA_PORT
 NALA_PORT
@@ -187,8 +185,6 @@ NALA_PORT
 - `INFLUXDB_ADMIN_TOKEN` Token used for admins. This is what Nala uses when querying and writing data.
 - `GRAFANA_ADMIN_USER` Admin username for Grafana
 - `GRAFANA_ADMIN_PASSWORD` Admin password for Grafana
-- `GRAFANA_ANONYMOUS_USER` Default username of anonymous users
-- `GRAFANA_ANONYMOUS_PASSWORD` Default password of anonymous users
 - `INFLUXDB_PORT` Default value of exposed port
 - `GRAFANA_PORT` Default value of exposed port
 - `NALA_PORT` Default value of exposed port
