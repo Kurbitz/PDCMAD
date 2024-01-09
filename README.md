@@ -149,29 +149,22 @@ simba fill --start-at 2d --duration 2d foo3.csv
 Nala is a RestAPI with a few built in commands. This could be hooked up to a web page or triggered by Bash scripts.
 
 DISCLAIMER: All examples will assume the default settings of the container and API.
-#### Trigger
-General structure:
-```shell
-curl HOSTNAME:PORT/[ALGORITHM]/[SYSTEM-NAME]/[DURATION]
+#### Endpoints
+Trigger:
 ```
-Trigger **I**solation **F**orest on `foo` with `36h` of data
-```shell
-curl localhost:8088/IF/foo/36h
+HOSTNAME:PORT/trigger/[ALGORITHM]/[SYSTEM-NAME]/[DURATION]
 ```
-#### Supported algorithms
-Check which algorithms nala supports right now.
-```shell
-curl localhost:8088/supported
+List supported algorithms:
 ```
-#### Status
-Check on status of anomaly detection. If it is done or not. This response can be used for automated anomaly detection.
-```shell
-curl localhost:8088/status
+HOSTNAME:PORT/algorithms
 ```
-#### Test
-Run a test to see if you can reach Nala.
-```shell
-curl localhost:8088/test
+Check status of detection:
+```
+HOSTNAME:PORT/status
+```
+Test endpoint:
+```
+HOSTNAME:PORT/test
 ```
 ### Grafana
 
