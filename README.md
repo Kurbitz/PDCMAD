@@ -1,13 +1,14 @@
 #  PDC-MAD - Performance Data Collection, Monitoring and Anomaly Detection
-![PDC-MAD octopus](PDCMAD-1600x1600.png)
-## Description
+<div align="center">
+    <img src="PDCMAD-1600x1600.png" alt="pdc-mad image" width="300px"></img>
+</div>
 
+## Description
 PDC-MAD is a project that will help future development of anomaly detection algorithms for server data by simulating "normal" data with the ability to inject anomalous data. With the built in anomaly detection module you can trigger any self-defined anomaly detection algorithms. Both simulated and anomaly data are stored in [InfluxDB](#services) and visualized as graphs with [Grafana](#services).
 
 It can either simulate in real-time or in batches. 
 
 ## Getting Started
-
 ### Dependencies
 
 - [Docker](https://docs.docker.com/get-docker/): In order to run the docker stack.
@@ -172,6 +173,7 @@ Run a test to see if you can reach Nala.
 ```shell
 curl localhost:8088/test
 ```
+### Grafana
 
 ## Environment Variables
 ### Docker
