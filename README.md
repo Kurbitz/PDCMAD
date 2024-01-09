@@ -135,8 +135,8 @@ simba stream --start-at 3d --append foo.csv
 Simulate ten days of data taken from multiple datasets
 ```shell
 simba fill --duration 2d --gap 10d foo1.csv;
-simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo.csv;
-simba fill --start-at 2d --duration 2d foo.csv
+simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo2.csv;
+simba fill --start-at 2d --duration 2d foo3.csv
 ```
 
 ### Nala
