@@ -14,7 +14,7 @@ It can either simulate in real-time or in batches.
 - [Go 1.20](https://go.dev/doc/install): In order to run Simba and Nala as a standalone.
 
 ### Installing
-This program is working on Windows 10 and 11 but the documentation for it will assume that you are a Linux user.
+This program is working on Windows 10 and 11 but the documentation will assume that you are a Linux user.
 #### Pre-requisites
 Clone PDC-MAD repository to desired location. Before deploying the containers you need to define the environment variables for the docker stack by creating a `.env` file. There is a `.env_example` in the docker folder so you know the general structure. They are further explained in the [Environment Variables](#environment-variables) section.
 
