@@ -190,7 +190,9 @@ func setupEndpoints(router *gin.Engine) {
 	router.GET("/nala/test", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Nala is working!")
 	})
-
+	router.GET("/nala/algorithms", func(ctx *gin.Context) {
+		strings.Join(maps.Keys(SupportedAlgorithms), ", ")
+	})
 	router.GET("/nala/status", func(ctx *gin.Context) {
 		responseText := ""
 		if inProgress {
