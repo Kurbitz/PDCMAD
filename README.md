@@ -2,19 +2,21 @@
 ![PDC-MAD octopus](PDCMAD-1600x1600.png)
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+PDC-MAD is a project that will help future development of anomaly detection algorithms for server data by simulating "normal" data with the ability to inject anomalous data. With the built in anomaly detection module you can trigger any self-defined anomaly detection algorithms. Both simulated and anomaly data are stored in [InfluxDB](#services) and visualized as graphs with [Grafana](#services).
+
+It can either simulate in real-time or in batches. 
 
 ## Getting Started
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+- [Docker](https://docs.docker.com/get-docker/): In order to run the docker stack.
+- [Go 1.20](https://go.dev/doc/install): In order to run Simba and Nala as a standalone.
 
 ### Installing
-
+This program is working on Windows 10 and 11 but the documentation for it will assume that you are a Linux user.
 #### Pre-requisites
-Clone PDC-MAD repository to desired location. Go to the repository root. Before deploying the containers you need to define the environment variables for the docker stack. There is a .env_example in the docker folder so you know the general structure. They are further explained in the [Environment Variables](#environment-variables) section.
+Clone PDC-MAD repository to desired location. Before deploying the containers you need to define the environment variables for the docker stack by creating a `.env` file. There is a `.env_example` in the docker folder so you know the general structure. They are further explained in the [Environment Variables](#environment-variables) section.
 
 #### Docker stack
 First step is to build nala. This needs to be done from the repository root folder because of shared dependencies.
@@ -36,7 +38,7 @@ In case of issues when installing the go program please read Go's [documentation
 #### Checking installation
 Now everything should be set up. You can try if everything is properly installed and running with the checks below.
 
-Grafana and InfluxDB is checked by going to browser and see if the service is up.
+Grafana and InfluxDB is checked by going to a browser and see if the service is up.
 
 Default InfluxDB:
 `http://localhost:8086`
@@ -46,13 +48,12 @@ Default Grafana:
 
 Testing Simba is by running the installed `simba` command and getting help text.
 
-Nala has a status command which tells you if there is any algorithms running.
+Nala has a test command.
 ```shell
-curl localhost:8088/status
+curl localhost:8088/test
 ```
 
 If all these commands works you have successfully installed PDC-MAD!
-
 
 ## Services
 #### InfluxDB
@@ -127,10 +128,10 @@ simba fill --duration 2d --gap 5d foo.csv;
 simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo.csv;
 simba fill --start-at 2d --duration 2d foo.csv
 ```
-Simulate three days of data and start real-time simulation
+Simulate 8h of data and start real-time simulation with anomalies
 ```shell
-simba fill --duration 3d foo.csv;
-simba stream --start-at 3d --append foo.csv
+simba fill --duration 8h foo.csv;
+simba stream --start-at 8h --append --anomalies cpu-user-high foo.csv
 ```
 Simulate ten days of data taken from multiple datasets
 ```shell
@@ -140,16 +141,71 @@ simba fill --start-at 2d --duration 2d foo3.csv
 ```
 
 ### Nala
+Nala is a RestAPI with a few built in commands. This could be hooked up to a web page or triggered by Bash scripts.
+
+DISCLAIMER: All examples will assume the default settings of the container and API.
+#### Trigger
+General structure:
+```shell
+curl HOSTNAME:PORT/[ALGORITHM]/[SYSTEM-NAME]/[DURATION]
+```
+Trigger **I**solation **F**orest on `foo` with `36h` of data
+```shell
+curl localhost:8088/IF/foo/36h
+```
+#### Status
+Check on status of anomaly detection. If it is done or not. This response can be used for automated anomaly detection.
+```shell
+curl localhost:8088/status
+```
+#### Test
+Run a test to see if you can reach Nala.
+```shell
+curl localhost:8088/test
+```
 
 ## Environment Variables
+List of variables
+```
+INFLUXDB_ADMIN_USER
+INFLUXDB_ADMIN_PASSWORD
+INFLUXDB_ORG
+INFLUXDB_BUCKET
+INFLUXDB_ADMIN_TOKEN
+GRAFANA_ADMIN_USER
+GRAFANA_ADMIN_PASSWORD
+GRAFANA_ANONYMOUS_USER
+GRAFANA_ANONYMOUS_PASSWORD
+INFLUXDB_PORT
+GRAFANA_PORT
+NALA_PORT
+```
+- `INFLUXDB_ADMIN_USER` Admin username for InfluxDB.
+- `INFLUXDB_ADMIN_PASSWORD` Admin password for InfluxDB.
+- `INFLUXDB_ORG` InfluxDB predefined organization.
+- `INFLUXDB_BUCKET` InfluxDB predefined bucket. This is where Simba will write and clean by default. Nala queries this bucket when getting the server data.
+- `INFLUXDB_ADMIN_TOKEN` Token used for admins. This is what Nala uses when querying and writing data.
+- `GRAFANA_ADMIN_USER` Admin username for Grafana
+- `GRAFANA_ADMIN_PASSWORD` Admin password for Grafana
+- `GRAFANA_ANONYMOUS_USER` Default username of anonymous users
+- `GRAFANA_ANONYMOUS_PASSWORD` Default password of anonymous users
+- `INFLUXDB_PORT` Default value of exposed port
+- `GRAFANA_PORT` Default value of exposed port
+- `NALA_PORT` Default value of exposed port
 
 ## Help
-
-Any advise for common problems or issues.
-```
-command to run if program contains helper info
-```
+Simba has help arguments (`-h`) for each subcommand.
+See [Nala's](#nala) documentation for general structure.
+Both [InfluxDB](https://docs.influxdata.com) and [Grafana](https://grafana.com/docs/) have their own well-defined documentation.
 
 ## Dataset
+For both Nala and Simba we use Westermo's [test-system-performance-dataset](https://github.com/westermo/test-system-performance-dataset) data structure. Follow the link to get more info on all the metrics.
+
 
 ## Authors
+- @Meeptard
+- @Kurbitz
+- @Ni7070
+- @segerstrom
+- @FerDovah
+- @cenza1
