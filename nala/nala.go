@@ -187,16 +187,16 @@ func checkEnv() {
 
 // setupEndpoints sets up the API endpoints for the router.
 func setupEndpoints(router *gin.Engine) {
-	router.GET("/nala/:algorithm/:host/:duration", triggerDetection)
+	router.GET("/:algorithm/:host/:duration", triggerDetection)
 
-	router.GET("/nala/test", func(ctx *gin.Context) {
+	router.GET("/test", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "Nala is working!")
 	})
 	// Lists all the supported algorithms by looking them up in the supportedAlgorithms map
 	router.GET("/algorithms", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, strings.Join(maps.Keys(SupportedAlgorithms), ", "))
 	})
-	router.GET("/nala/status", func(ctx *gin.Context) {
+	router.GET("/status", func(ctx *gin.Context) {
 		responseText := ""
 		if inProgress {
 			responseText = "Anomaly detection in progress"
