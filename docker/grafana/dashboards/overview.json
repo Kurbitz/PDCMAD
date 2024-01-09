@@ -477,6 +477,13 @@
                             ]
                         }
                     }
+                },
+                {
+                    "id": "renameByRegex",
+                    "options": {
+                        "regex": "(.*)\\.(.*)",
+                        "renamePattern": "$2"
+                    }
                 }
             ],
             "type": "state-timeline"
