@@ -73,12 +73,8 @@
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
                                 "color": "red",
-                                "value": 1
+                                "value": null
                             }
                         ]
                     }
@@ -229,7 +225,8 @@
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "palette-classic"
+                        "fixedColor": "semi-dark-blue",
+                        "mode": "fixed"
                     },
                     "custom": {
                         "axisBorderShow": false,
@@ -365,7 +362,7 @@
                         "mode": "thresholds"
                     },
                     "custom": {
-                        "fillOpacity": 70,
+                        "fillOpacity": 80,
                         "hideFrom": {
                             "legend": false,
                             "tooltip": false,
@@ -375,7 +372,28 @@
                         "lineWidth": 0,
                         "spanNulls": false
                     },
-                    "mappings": [],
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "true",
+                                "result": {
+                                    "color": "red",
+                                    "index": 0
+                                }
+                            },
+                            "type": "special"
+                        },
+                        {
+                            "options": {
+                                "match": "false",
+                                "result": {
+                                    "color": "green",
+                                    "index": 1
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
                     "thresholds": {
                         "mode": "absolute",
                         "steps": [
