@@ -481,8 +481,8 @@
                 {
                     "id": "renameByRegex",
                     "options": {
-                        "regex": "(.*)\\.(.*)",
-                        "renamePattern": "$2"
+                        "regex": "anomalies.(.*)",
+                        "renamePattern": "$1"
                     }
                 }
             ],
