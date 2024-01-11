@@ -183,21 +183,21 @@ As the append argument is not available for `fill` you have to shift the data wi
 
 Simulate five days with one day of anomalous data
 ```shell
-simba fill --duration 2d --gap 5d foo.csv;
+simba fill --duration 2d --gap 5d foo.csv
 simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo.csv
 simba fill --start-at 2d --duration 2d foo.csv
 ```
 
 Simulate 8h of data, then start real-time simulation with anomalies
 ```shell
-simba fill --duration 8h foo.csv;
+simba fill --duration 8h foo.csv
 simba stream --start-at 8h --append --anomalies cpu-user-high foo.csv
 ```
 
 Simulate ten days of data taken from multiple datasets
 ```shell
-simba fill --duration 2d --gap 10d foo1.csv;
-simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo2.csv;
+simba fill --duration 2d --gap 10d foo1.csv
+simba fill --start-at 2d --duration 1d --gap 3d --anomaly cpu-user-sin foo2.csv
 simba fill --start-at 2d --duration 2d foo3.csv
 ```
 
