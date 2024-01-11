@@ -73,12 +73,8 @@
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
                                 "color": "red",
-                                "value": 1
+                                "value": null
                             }
                         ]
                     }
@@ -229,7 +225,8 @@
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "palette-classic"
+                        "fixedColor": "semi-dark-blue",
+                        "mode": "fixed"
                     },
                     "custom": {
                         "axisBorderShow": false,
@@ -365,17 +362,38 @@
                         "mode": "thresholds"
                     },
                     "custom": {
-                        "fillOpacity": 70,
+                        "fillOpacity": 80,
                         "hideFrom": {
                             "legend": false,
                             "tooltip": false,
                             "viz": false
                         },
-                        "insertNulls": false,
+                        "insertNulls": 60000,
                         "lineWidth": 0,
                         "spanNulls": false
                     },
-                    "mappings": [],
+                    "mappings": [
+                        {
+                            "options": {
+                                "match": "true",
+                                "result": {
+                                    "color": "red",
+                                    "index": 0
+                                }
+                            },
+                            "type": "special"
+                        },
+                        {
+                            "options": {
+                                "match": "false",
+                                "result": {
+                                    "color": "green",
+                                    "index": 1
+                                }
+                            },
+                            "type": "special"
+                        }
+                    ],
                     "thresholds": {
                         "mode": "absolute",
                         "steps": [
@@ -481,8 +499,8 @@
                 {
                     "id": "renameByRegex",
                     "options": {
-                        "regex": "(.*)\\.(.*)",
-                        "renamePattern": "$2"
+                        "regex": "anomalies.(.*)",
+                        "renamePattern": "$1"
                     }
                 }
             ],
@@ -593,7 +611,7 @@
             "type": "table"
         }
     ],
-    "refresh": "",
+    "refresh": "1m",
     "schemaVersion": 38,
     "tags": [],
     "templating": {
@@ -601,8 +619,8 @@
             {
                 "current": {
                     "selected": false,
-                    "text": "cpu-user",
-                    "value": "cpu-user"
+                    "text": "None",
+                    "value": "None"
                 },
                 "datasource": {
                     "type": "influxdb",
@@ -623,9 +641,9 @@
             },
             {
                 "current": {
-                    "selected": true,
-                    "text": "system-3",
-                    "value": "system-3"
+                    "selected": false,
+                    "text": "None",
+                    "value": "None"
                 },
                 "datasource": {
                     "type": "influxdb",
@@ -646,9 +664,9 @@
             },
             {
                 "current": {
-                    "selected": true,
-                    "text": "IF",
-                    "value": "IF"
+                    "selected": false,
+                    "text": "None",
+                    "value": "None"
                 },
                 "datasource": {
                     "type": "influxdb",
@@ -670,7 +688,7 @@
         ]
     },
     "time": {
-        "from": "now-2d",
+        "from": "now-7d",
         "to": "now"
     },
     "timepicker": {},
