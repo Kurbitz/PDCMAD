@@ -41,7 +41,7 @@ For both Nala and Simba we use Westermo's [test-system-performance-dataset](http
 This program should work on Windows 10 and 11 but only Linux is officially supported. This documentation will assume that you are using Linux.
 
 #### Pre-requisites
-Clone PDC-MAD repository to desired location. Before deploying the containers you need to define the environment variables for the docker stack by creating a `.env` file int the same directory as the `docker-compose.yml` file. The `.env.example` file contains all the variables that are needed, we recommend copying this file and changing the values to your liking. They are further explained in the [Environment Variables](#environment-variables) section.
+Clone PDC-MAD repository to desired location. Before deploying the containers you need to define the environment variables for the docker stack by creating a `.env` file in the same directory as the `docker-compose.yml` file. The `.env.example` file contains all the variables that are needed, we recommend copying this file and changing the values to your liking. They are further explained in the [Environment Variables](#environment-variables) section.
 
 #### Docker stack
 First step is to build nala. This needs to be done from the repository root folder because of shared dependencies. Use the following command to build the image:
@@ -209,7 +209,6 @@ The following endpoints are available:
 
 - `/trigger/[ALGORITHM]/[SYSTEM-NAME]/[DURATION]` to trigger an algorithm on a system for a duration.
 - `/algorithms` to get a list of available algorithms.
-Check status of detection:
 - `/status` to get the status of the detection.
 - `/test` to test that the API is working.
 
@@ -227,7 +226,7 @@ The first panel is a combined query of anomalies and system metrics where each a
 #### Metrics
 Second panel consists of just the system metrics without any overlapping anomalies.
 #### System overview
-This state diagram provides a general overview of each anomaly found by algorithm on the system in a digestable manner.
+This state diagram provides a general overview of each anomaly found by algorithm on the system in a digestible manner.
 #### Anomaly across systems
 Last panel contains a table with the count of anomlies on selected field for each system with data.
 
@@ -255,8 +254,12 @@ Simba has some environment variables as well. Here is a list of them:
 
 ## Help
 Simba has help arguments (`-h`) for each command.
+
 See [Nala's](#nala) documentation for general structure.
+
 Both [InfluxDB](https://docs.influxdata.com) and [Grafana](https://grafana.com/docs/) have their own well-defined documentation.
+
+If you are using windows the `openssl` command in `.env_example` will not work and you have to generate it on your own.
 
 ## Authors
 - [Meeptard](https://github.com/Meeptard)
