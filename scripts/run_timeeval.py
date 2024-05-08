@@ -38,6 +38,35 @@ def main():
     dm = DatasetManager(Path("test/w_data/"), create_if_missing=False)
     datasets = dm.select()
     algorithms = [
+        # donut(),
+        # lstm_ad(),
+        # torsk(),
+        # grammarviz3(),
+        # cof(params=FixedParameters({"n_neighbors": 20, "random_state": 42})),
+        Algorithm(
+            name="MyPythonFunctionAlgorithm",
+            main=FunctionAdapter(your_algorithm_function),
+            data_as_file=False,
+            param_config=FixedParameters(
+                {
+                    "scalar": 0.95,
+                }
+            ),
+        ),
+        Algorithm(
+            name="MyPythonFunctionAlgorithm",
+            main=FunctionAdapter(your_algorithm_function),
+            data_as_file=False,
+            param_config=FixedParameters(
+                {
+                    "scalar": 1.5,
+                }
+            ),
+        ),
+        subsequence_lof(params=FixedParameters({"window_size": 50, "n_neighbors": 40})),
+        kmeans(params=FixedParameters({"anomaly_window_size": 200, "n_clusters": 40})),
+        kmeans(),
+        # dwt_mlead(),
         # list of algorithms which will be executed on the selected dataset(s)
         # calling customized algorithm
     ]
