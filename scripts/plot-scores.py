@@ -8,12 +8,17 @@ Use directly from the project root directory:
 """
 
 import argparse
+from typing import List
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import figure, axes
+
 
 from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
+
 
 
 def _create_arg_parser() -> argparse.Namespace:
@@ -47,6 +52,7 @@ def _create_arg_parser() -> argparse.Namespace:
 
 
 def plot(data, labels, scores, column_names, data_path, score_path):
+    axs: List[axes.Axes]
     fig, axs = plt.subplots(2, 1, sharex=True, figsize=(20, 10))
 
     axs[0].set_title(f"Data from '{data_path}'")
@@ -57,26 +63,32 @@ def plot(data, labels, scores, column_names, data_path, score_path):
 
     for i in range(data.shape[1]):
         axs[0].plot(
-            data[:, i],
-            label=column_names[i],
-            linestyle=line_styles[i % len(line_styles)],
-            color=colors[i % len(colors)],
+            data[:, 0],
+            label="Time series",
+            linestyle='-',
+            color='blue',
         )
 
     # label all lines
     axs[0].legend()
 
     if labels is not None:
-        axs[1].plot(labels, label="ground truth", color="blue", linestyle="-.")
-    axs[1].plot(scores, label="score", color="orange", linestyle="--")
-    axs[1].legend("ground truth", "score")
+        # axs[1].plot(labels, label="ground truth", color="skyblue", linestyle="-.", alpha=0.5)
+        x = np.arange(len(scores))
+        print(data[:,0].shape)
+        # axs[0].fill_between(np.arange(len(labels)),0,labels,where=(labels>0),color='skyblue',alpha=0.3)
+        axs[0].fill_between(x,0,np.max(data)*1.1,where=labels[1:]==1,color='red',alpha=0.3)
+        # axs[0].fill_between(x,0,scores,where=labels[1:]==1,color='red',alpha=0.3)
+        
+    axs[1].plot(scores, label="score", color="orange", linestyle="--")  
 
     # add a line a 0.5
-    axs[1].axhline(0.5, color="red", linestyle="--")
+    # axs[1].axhline(0.5, color="red", linestyle="--", alpha=0.5)
+    axs[1].legend(labels=[])
 
     plt.legend()
 
-    plt.show()
+    plt.savefig("plot.png")
 
 
 def main(data_path: Path, score_path: Path, plot_label: bool):
