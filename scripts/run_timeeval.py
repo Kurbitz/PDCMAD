@@ -12,7 +12,7 @@ from timeeval.algorithms.subsequence_if import subsequence_if
 from timeeval.params.base import FixedParameters
 from timeeval.metrics.auc_metrics import PrAUC
 from timeeval.params.bayesian import BayesianParameterSearch
-from timeeval.params.grid_search import IndependentParameterGrid
+from timeeval.params.grid_search import FullParameterGrid
 from timeeval.params.grid_search import FullParameterGrid
 from optuna.distributions import IntDistribution
 from timeeval.integration.optuna.config import OptunaStudyConfiguration
@@ -74,15 +74,54 @@ def main():
     dm = DatasetManager(Path("test/w_data/"), create_if_missing=False)
     thermal_datasets = dm.select(collection="sys-thermal")
     cpu_datasets = dm.select(collection="cpu-user")
-    smb_datasets = dm.select(collection="sys-mem-buffered")
+    smb_datasets = dm.select()
+
+    dwt_params = FullParameterGrid(
+        {
+            "start_level" : [1, 2, 3],
+            "quantile_epsilon": [0.01, 0.02, 0.04, 0.08, 0.16],
+        }
+    )
+
+    kmeans_params = FullParameterGrid(
+        {
+            "anomaly_window_size": [200, 300, 400],
+            "n_clusters": [2, 3, 4],
+        }
+    )
+    grammarviz3_params = FullParameterGrid(
+        {
+            "alphabet_size": [2, 3, 4],
+            "anomaly_window_size": [200, 300, 400],
+            "paa_transform_size": [3, 4, 5],
+        }
+    )
+    subsequence_lof_params = FullParameterGrid(
+        {
+            "window_size": [25, 50, 75],
+            "n_neighbors": [100, 200, 300],
+        }
+    )
+    subsequence_if_params = FullParameterGrid(
+        {
+            "window_size": [25, 50, 75],
+            "n_trees": [50, 100, 150],
+        }
+    )
+    lstm_ad_params = FullParameterGrid(
+        {
+            "window_size": [25, 50, 75],
+        }
+    )
+
 
     cpu_algorithms = [
-        # dwt_mlead(),
-        # kmeans(params=FixedParameters({"anomaly_window_size": 200, "n_clusters": 2})),
-        # grammarviz3(params=FixedParameters({"alphabet_size": 4, "anomaly_window_size": 200, "paa_transform_size": 3})),
-        # subsequence_lof(params=FixedParameters({"n_neighbors": 50, "window_size": 60})),
-        # subsequence_if(params=FixedParameters({"window_size": 75})),
-        # lstm_ad(params=FixedParameters({"window_size": 27})),
+        dwt_mlead(params=FixedParameters({"quantile_epsilon": 0.02, "start_level": 3})),
+        kmeans(params=FixedParameters({"anomaly_window_size": 200, "n_clusters": 2})),
+        grammarviz3(params=FixedParameters({"alphabet_size": 4, "anomaly_window_size": 200, "paa_transform_size": 3})),
+        subsequence_lof(params=FixedParameters({"n_neighbors": 50, "window_size": 60})),
+        subsequence_if(params=FixedParameters({"window_size": 75})),
+        lstm_ad(params=FixedParameters({"window_size": 27})),
         Algorithm(
             name="ReferenceAlgorithm",
             main=FunctionAdapter(threshold),
@@ -98,7 +137,7 @@ def main():
     ]    
 
     thermal_algo = [
-        # dwt_mlead(),
+        dwt_mlead(params=FixedParameters({"quantile_epsilon": 0.16, "start_level": 1})),
         # kmeans(params=FixedParameters({"anomaly_window_size": 70, "n_clusters": 120})),
         # grammarviz3(params=FixedParameters({"alphabet_size": 2, "anomaly_window_size": 200, "paa_transform_size": 3})),
         # subsequence_lof(params=FixedParameters({"window_size": 25, "n_neighbors": 800})),
@@ -117,49 +156,49 @@ def main():
     ]
 
     smb_algorithms = [
-        # dwt_mlead(),
-        # kmeans(params=FixedParameters({"anomaly_window_size": 320, "n_clusters": 2})),
-        # grammarviz3(params=FixedParameters({"alphabet_size": 4, "anomaly_window_size": 100, "paa_transform_size": 3})),
-        # subsequence_lof(params=FixedParameters({"n_neighbors": 512, "window_size": 4})),
-        # subsequence_if(params=FixedParameters({"n_trees": 32, "window_size": 64})),
-        # lstm_ad(params=FixedParameters({"window_size": 8})),
+        dwt_mlead(params=FixedParameters({"quantile_epsilon": 0.08, "start_level": 1})),
+        kmeans(params=FixedParameters({"anomaly_window_size": 320, "n_clusters": 2})),
+        grammarviz3(params=FixedParameters({"alphabet_size": 4, "anomaly_window_size": 100, "paa_transform_size": 3})),
+        subsequence_lof(params=FixedParameters({"n_neighbors": 512, "window_size": 4})),
+        subsequence_if(params=FixedParameters({"n_trees": 32, "window_size": 64})),
+        lstm_ad(params=FixedParameters({"window_size": 8})),
         Algorithm(
             name="ReferenceAlgorithm",
             main=FunctionAdapter(threshold),
             data_as_file=False,
             param_config=FixedParameters(
                 {
-                    "scalar": 1215494622,
+                    "scalar": 1_215_494_622,
                     "direction": "less",
                 }
             ),
         ),
     ]
 
-    thermal_timeval = TimeEval(
-        dm,
-        thermal_datasets,
-        thermal_algo,
-        metrics=[
-            DefaultMetrics.ROC_AUC,
-            DefaultMetrics.RANGE_PR_AUC,
-            DefaultMetrics.AVERAGE_PRECISION,
-            DefaultMetrics.PR_AUC,
-        ],
-        results_path=TimeEval.DEFAULT_RESULT_PATH.joinpath("thermal"),
-    )
-    cpu_timeval = TimeEval(
-        dm,
-        cpu_datasets,
-        cpu_algorithms,
-        metrics=[
-            DefaultMetrics.ROC_AUC,
-            DefaultMetrics.RANGE_PR_AUC,
-            DefaultMetrics.AVERAGE_PRECISION,
-            DefaultMetrics.PR_AUC,
-        ],
-        results_path=TimeEval.DEFAULT_RESULT_PATH.joinpath("cpu"),
-    )
+    # thermal_timeval = TimeEval(
+    #     dm,
+    #     thermal_datasets,
+    #     thermal_algo,
+    #     metrics=[
+    #         DefaultMetrics.ROC_AUC,
+    #         DefaultMetrics.RANGE_PR_AUC,
+    #         DefaultMetrics.AVERAGE_PRECISION,
+    #         DefaultMetrics.PR_AUC,
+    #     ],
+    #     results_path=TimeEval.DEFAULT_RESULT_PATH.joinpath("thermal"),
+    # )
+    # cpu_timeval = TimeEval(
+    #     dm,
+    #     cpu_datasets,
+    #     cpu_algorithms,
+    #     metrics=[
+    #         DefaultMetrics.ROC_AUC,
+    #         DefaultMetrics.RANGE_PR_AUC,
+    #         DefaultMetrics.AVERAGE_PRECISION,
+    #         DefaultMetrics.PR_AUC,
+    #     ],
+    #     results_path=TimeEval.DEFAULT_RESULT_PATH.joinpath("cpu"),
+    # )
 
     smb_timeval = TimeEval(
         dm,
@@ -174,12 +213,12 @@ def main():
         results_path=TimeEval.DEFAULT_RESULT_PATH.joinpath("smb"),
     )
 
-    thermal_timeval.run()
-    results = thermal_timeval.get_results(aggregated=False)
-    print(results)
-    cpu_timeval.run()
-    results = cpu_timeval.get_results(aggregated=False)
-    print(results)
+    # thermal_timeval.run()
+    # results = thermal_timeval.get_results(aggregated=False)
+    # print(results)
+    # cpu_timeval.run()
+    # results = cpu_timeval.get_results(aggregated=False)
+    # print(results)
     smb_timeval.run()
     results = smb_timeval.get_results(aggregated=False)
     print(results)
